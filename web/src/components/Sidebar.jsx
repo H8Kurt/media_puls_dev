@@ -7,11 +7,11 @@ const Sidebar = () => {
   
   const menuItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Обзор' },
+    { path: '/dashboard/calendar', icon: Calendar, label: 'Календарь' },
     { path: '/dashboard/content', icon: Calendar, label: 'Контент-план' },
     { path: '/dashboard/analytics', icon: BarChart3, label: 'Аналитика' },
     { path: '/dashboard/community', icon: Users, label: 'Сообщества' },
   ];
-
   return (
     <div className="w-64 bg-white h-screen border-r border-gray-200 flex flex-col">
       <div className="p-6">
