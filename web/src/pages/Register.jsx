@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -8,16 +9,47 @@ const Register = () => {
     password: '',
     role: 'manager'
   });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
   const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.setAuth);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Имитация регистрации
-    navigate('/dashboard');
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email: formData.email, 
+          password: formData.password, 
+          name: formData.username 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Ошибка при регистрации');
+      }
+
+      setAuth(data.user, data.token);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -48,6 +80,12 @@ const Register = () => {
             </p>
           </div>
 
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-2xl">
+              {error}
+            </div>
+          )}
+
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
@@ -56,6 +94,7 @@ const Register = () => {
                   name="username"
                   type="text"
                   required
+                  disabled={isLoading}
                   value={formData.username}
                   onChange={handleChange}
                   className="block w-full px-4 py-3.5 bg-slate-50 border border-slate-200 placeholder-slate-400 text-slate-900 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
@@ -68,6 +107,7 @@ const Register = () => {
                   name="email"
                   type="email"
                   required
+                  disabled={isLoading}
                   value={formData.email}
                   onChange={handleChange}
                   className="block w-full px-4 py-3.5 bg-slate-50 border border-slate-200 placeholder-slate-400 text-slate-900 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
@@ -80,6 +120,7 @@ const Register = () => {
                   name="password"
                   type="password"
                   required
+                  disabled={isLoading}
                   value={formData.password}
                   onChange={handleChange}
                   className="block w-full px-4 py-3.5 bg-slate-50 border border-slate-200 placeholder-slate-400 text-slate-900 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
@@ -91,6 +132,7 @@ const Register = () => {
                 <div className="relative">
                   <select 
                     name="role"
+                    disabled={isLoading}
                     value={formData.role}
                     onChange={handleChange}
                     className="block w-full px-4 py-3.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none cursor-pointer"
@@ -109,9 +151,10 @@ const Register = () => {
 
             <button
               type="submit"
-              className="w-full flex justify-center py-4 px-4 border border-transparent text-base font-bold rounded-2xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg shadow-indigo-100 transition-all active:scale-[0.98] mt-2"
+              disabled={isLoading}
+              className="w-full flex justify-center py-4 px-4 border border-transparent text-base font-bold rounded-2xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg shadow-indigo-100 transition-all active:scale-[0.98] mt-2 disabled:opacity-70"
             >
-              Зарегистрироваться
+              {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
             </button>
           </form>
 

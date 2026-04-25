@@ -9,7 +9,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { TrendingUp, Users, MessageSquare, Share2, Eye } from 'lucide-react';
-import mockData from '../../../mock_data.json';
+import mockData from '../../mock_data.json';
 
 const Dashboard = () => {
   const [period, setPeriod] = useState('month');

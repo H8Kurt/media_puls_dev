@@ -1,15 +1,43 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
   const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.setAuth);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Имитация входа
-    navigate('/dashboard');
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Ошибка при входе');
+      }
+
+      setAuth(data.user, data.token);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -40,6 +68,12 @@ const Login = () => {
             </p>
           </div>
 
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-2xl">
+              {error}
+            </div>
+          )}
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
@@ -52,6 +86,7 @@ const Login = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full px-4 py-4 bg-slate-50 border border-slate-200 placeholder-slate-400 text-slate-900 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   placeholder="name@company.com"
+                  disabled={isLoading}
                 />
               </div>
               <div>
@@ -64,6 +99,7 @@ const Login = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full px-4 py-4 bg-slate-50 border border-slate-200 placeholder-slate-400 text-slate-900 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   placeholder="••••••••"
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -82,9 +118,10 @@ const Login = () => {
 
             <button
               type="submit"
-              className="w-full flex justify-center py-4 px-4 border border-transparent text-base font-bold rounded-2xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg shadow-indigo-100 transition-all active:scale-[0.98]"
+              disabled={isLoading}
+              className="w-full flex justify-center py-4 px-4 border border-transparent text-base font-bold rounded-2xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg shadow-indigo-100 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Войти в систему
+              {isLoading ? 'Вход...' : 'Войти в систему'}
             </button>
           </form>
 
