@@ -12,7 +12,7 @@ const startServer = async () => {
   try {
     await initModels();
     initVkJobs(); // Инициализация сбора статистики ВК
-    initBot();    // Запуск Telegram-бота
+    // initBot();    // Запуск Telegram-бота (отключено, используем Python-бота)
     initVkBot();  // Запуск ВК-бота
     app.listen(PORT, () => {
       console.log(`Server started on port ${PORT}`);
