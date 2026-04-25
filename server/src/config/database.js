@@ -1,4 +1,5 @@
 const { Sequelize } = require('sequelize');
+require('dotenv').config(); // Добавляем загрузку .env здесь
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
