@@ -39,6 +39,7 @@ const PostsListPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [localPosts, setLocalPosts] = useState([]);
 
+
   // Загрузка локальных постов
   useEffect(() => {
     const saved = localStorage.getItem('user_posts');

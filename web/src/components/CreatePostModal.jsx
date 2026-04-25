@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Image, Video, Calendar, Clock, Send, Save, FileText, Check, Plus } from 'lucide-react';
+import { X, Image, Video, Calendar, Clock, Send, Save, FileText, Check, Plus, User } from 'lucide-react';
 
 const TEMPLATES = {
   event: {
@@ -25,7 +25,7 @@ const CHANNELS = [
   { id: 'vk', name: 'ВКонтакте', icon: 'VK' }
 ];
 
-const CreatePostModal = ({ isOpen, onClose, onSave }) => {
+const CreatePostModal = ({ isOpen, onClose, onSave, initialData = null }) => {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -34,12 +34,36 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
     publishDate: '',
     publishTime: '',
     status: 'draft',
-    media: []
+    media: [],
+    author: ''
   });
 
   const [previews, setPreviews] = useState([]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        ...initialData,
+        publishDate: initialData.publish_date || '',
+        publishTime: initialData.publish_time || '',
+        channels: initialData.channels || []
+      });
+      // Если есть медиа в initialData, здесь можно было бы настроить превью
+    } else {
+      setFormData({
+        title: '',
+        content: '',
+        category: 'event',
+        channels: [],
+        publishDate: '',
+        publishTime: '',
+        status: 'draft',
+        media: [],
+        author: ''
+      });
+      setPreviews([]);
+    }
+  }, [initialData, isOpen]);
 
   const handleTemplateSelect = (type) => {
     setFormData(prev => ({
@@ -86,15 +110,27 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
     onClose();
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
       <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <h2 className="text-xl font-bold text-slate-800">Создание публикации</h2>
-          <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-            <X size={20} className="text-slate-500" />
-          </button>
+          <h2 className="text-xl font-bold text-slate-800">
+            {initialData ? 'Модерация публикации' : 'Создание публикации'}
+          </h2>
+          <div className="flex items-center gap-4">
+            {formData.author && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">
+                <User size={14} />
+                Автор: {formData.author}
+              </div>
+            )}
+            <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+              <X size={20} className="text-slate-500" />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
