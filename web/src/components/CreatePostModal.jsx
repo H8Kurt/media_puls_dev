@@ -66,12 +66,16 @@ const CreatePostModal = ({ isOpen, onClose, onSave }) => {
   };
 
   const handleSubmit = (status) => {
+    const now = new Date();
+    const currentDate = now.toISOString().split('T')[0];
+    const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
+
     const postData = {
       ...formData,
       id: Date.now(),
       status: status || formData.status,
-      publish_date: formData.publishDate || new Date().toISOString().split('T')[0],
-      publish_time: formData.publishTime || '12:00',
+      publish_date: formData.publishDate || currentDate,
+      publish_time: formData.publishTime || currentTime,
     };
 
     // Сохранение в LocalStorage

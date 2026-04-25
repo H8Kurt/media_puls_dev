@@ -5,12 +5,10 @@ import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ChannelsPage from './pages/ChannelsPage';
 import CalendarPage from './pages/CalendarPage';
 import PostsListPage from './pages/PostsListPage';
-
-// Заглушки для подразделов дашборда
-const Analytics = () => <div className="p-8 text-2xl font-bold">Аналитика (в разработке)</div>;
-const Community = () => <div className="p-8 text-2xl font-bold">Сообщества (в разработке)</div>;
+import Analytics from './pages/Analytics';
 
 function App() {
   return (
@@ -27,7 +25,7 @@ function App() {
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="content" element={<PostsListPage />} />
           <Route path="analytics" element={<Analytics />} />
-          <Route path="community" element={<Community />} />
+          <Route path="community" element={<ChannelsPage />} />
           <Route path="settings" element={<div className="p-8 text-2xl font-bold">Настройки</div>} />
         </Route>
 
