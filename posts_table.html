@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Контент-план</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --tg-color: #0369a1;
+            --tg-bg: #e0f2fe;
+            --vk-color: #4338ca;
+            --vk-bg: #eef2ff;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 24px;
+            line-height: 1.5;
+            position: relative;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Pulse Background Decorations */
+        body::before, body::after {
+            content: "";
+            position: fixed;
+            width: 900px;
+            height: 700px;
+            filter: blur(70px);
+            opacity: 0.4; /* Еще ярче */
+            z-index: -1;
+            pointer-events: none;
+            border-radius: 50%;
+        }
+
+        body::before {
+            background: radial-gradient(circle, #4f46e5 0%, rgba(79, 70, 229, 0) 75%);
+            top: -250px;
+            right: -150px;
+        }
+
+        body::after {
+            background: radial-gradient(circle, #ef4444 0%, rgba(239, 68, 68, 0) 75%);
+            bottom: -250px;
+            left: -150px;
+        }
+
+        .pulse-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .ecg-svg {
+            position: absolute;
+            top: 40%;
+            left: 0;
+            width: 200%;
+            height: 300px;
+            opacity: 0.2;
+        }
+
+        .ecg-path {
+            stroke-dasharray: 2000;
+            stroke-dashoffset: 2000;
+            animation: draw-ecg 6s linear infinite;
+        }
+
+        .ecg-path-blue {
+            stroke: #6366f1;
+            stroke-width: 3;
+            fill: none;
+        }
+
+        .ecg-path-red {
+            stroke: #ef4444;
+            stroke-width: 2;
+            fill: none;
+            animation-delay: 3s;
+        }
+
+        @keyframes draw-ecg {
+            0% { stroke-dashoffset: 2000; }
+            50% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: -2000; }
+        }
+
+        .calendar-card {
+
+            max-width: 1100px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            padding: 32px 32px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .header-left h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #0f172a;
+        }
+
+        .header-left p {
+            margin: 4px 0 0;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .stats-bar {
+            margin: 0 32px 32px;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 16px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .day-group {
+            border-top: 1px solid var(--border);
+        }
+
+        .day-title {
+            padding: 12px 32px;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .date-circle {
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+        }
+
+        .day-name {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td {
+            padding: 20px 32px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .time-cell {
+            width: 70px;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .post-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .post-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: #0f172a;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .post-title:hover {
+            color: var(--primary);
+        }
+
+        .post-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .badge-tg { background: var(--tg-bg); color: var(--tg-color); }
+        .badge-vk { background: var(--vk-bg); color: var(--vk-color); }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .status-published { background: #10b981; }
+        .status-pending { background: #f59e0b; }
+    </style>
+</head>
+<body>
+    <div class="pulse-line">
+        <svg class="ecg-svg" viewBox="0 0 2000 300" preserveAspectRatio="none">
+            <path class="ecg-path ecg-path-blue" d="M0 150 L200 150 L220 50 L240 250 L260 150 L500 150 L520 20 L540 280 L560 150 L800 150 L820 80 L840 220 L860 150 L1100 150 L1120 40 L1140 260 L1160 150 L1400 150 L1420 10 L1440 290 L1460 150 L1700 150 L1720 70 L1740 230 L1760 150 L2000 150" />
+            <path class="ecg-path ecg-path-red" d="M0 180 L250 180 L270 100 L290 260 L310 180 L600 180 L620 60 L640 300 L660 180 L900 180 L920 120 L940 240 L960 180 L1200 180 L1220 80 L1240 280 L1260 180 L1500 180 L1520 30 L1540 310 L1560 180 L1800 180 L1820 110 L1840 250 L1860 180 L2000 180" />
+        </svg>
+    </div>
+    <div class="calendar-card">
+
+    <div class="calendar-header">
+        <div class="header-left">
+            <h1>Контент-план</h1>
+            <p>Апрель 2026 • Неделя 17</p>
+        </div>
+        <button style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; cursor: pointer;">
+            + Создать пост
+        </button>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-label">Дата</span>
+            <span class="stat-value">25 — 27 апреля</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Категория</span>
+            <span class="stat-value">SMM, Media, Design</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Канал ТГ/ВК</span>
+            <div style="display: flex; gap: 6px; margin-top: 2px;">
+                <span class="badge badge-tg">TG: 2</span>
+                <span class="badge badge-vk">VK: 2</span>
+            </div>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Заголовок</span>
+            <span class="stat-value">4 публикации</span>
+        </div>
+    </div>
+
+    <div class="day-group">
+        <div class="day-title">
+            <div class="date-circle">25</div>
+            <div class="day-name">Суббота, Апрель</div>
+        </div>
+        <table>
+            <tbody>
+                <tr>
+                    <td class="time-cell">10:00</td>
+                    <td>
+                        <div class="post-info">
+                            <a href="#" class="post-title">Стратегия продвижения ВК на май 2026</a>
+                            <div class="post-meta">
+                                <span class="badge badge-vk">ВКонтакте</span>
+                                <span>•</span>
+                                <span>SMM</span>
+                                <span>•</span>
+                                <span><span class="status-dot status-published"></span>Опубликовано</span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>
