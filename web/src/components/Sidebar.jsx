@@ -1,17 +1,18 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Calendar, BarChart3, Settings, Users } from 'lucide-react';
+import { LayoutDashboard, Calendar, BarChart3, Settings, Users, ShieldCheck, FileText } from 'lucide-react';
 
 const Sidebar = () => {
   const location = useLocation();
   
   const menuItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Обзор' },
-    { path: '/dashboard/content', icon: Calendar, label: 'Контент-план' },
+    { path: '/dashboard/calendar', icon: Calendar, label: 'Календарь' },
+    { path: '/dashboard/content', icon: FileText, label: 'Контент-план' },
+    { path: '/dashboard/moderation', icon: ShieldCheck, label: 'Модерация' },
     { path: '/dashboard/analytics', icon: BarChart3, label: 'Аналитика' },
     { path: '/dashboard/community', icon: Users, label: 'Сообщества' },
   ];
-
   return (
     <div className="w-64 bg-white h-screen border-r border-gray-200 flex flex-col">
       <div className="p-6">
