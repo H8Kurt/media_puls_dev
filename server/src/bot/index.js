@@ -1,5 +1,6 @@
 const { Telegraf } = require('telegraf');
 const { PendingPost } = require('../models');
+const { downloadFile } = require('../utils/fileDownloader');
 
 const initBot = () => {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -23,7 +24,7 @@ const initBot = () => {
         // Берем самое большое фото из массива
         const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
         const link = await ctx.telegram.getFileLink(fileId);
-        mediaUrl = link.href;
+        mediaUrl = await downloadFile(link.href);
       }
 
       if (!text && !mediaUrl) {

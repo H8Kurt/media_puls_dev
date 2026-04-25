@@ -5,7 +5,7 @@ const VK_API_VERSION = '5.131';
 
 class VkService {
   constructor() {
-    this.accessToken = process.env.VK_ACCESS_TOKEN;
+    this.accessToken = process.env.VK_SERVICE_TOKEN || process.env.VK_ACCESS_TOKEN;
     this.groupId = process.env.VK_GROUP_ID;
   }
 
@@ -108,6 +108,42 @@ class VkService {
       console.log('Successfully updated VK group stats');
     } catch (error) {
       console.error('Error fetching VK group stats:', error.message);
+    }
+  }
+
+  async publishPost(post) {
+    try {
+      const groupToken = process.env.VK_GROUP_TOKEN || process.env.VK_ACCESS_TOKEN;
+      if (!groupToken || !this.groupId) {
+        throw new Error('Missing VK_GROUP_TOKEN or VK_GROUP_ID');
+      }
+
+      const params = {
+        owner_id: `-${this.groupId.toString().replace(/[^0-9]/g, '')}`,
+        message: post.text,
+        access_token: groupToken,
+        v: VK_API_VERSION,
+      };
+
+      // Если есть картинка, её нужно сначала загрузить на сервера ВК или прикрепить ссылкой
+      // Для начала попробуем прикрепить как attachment, если это ссылка на ресурс ВК
+      if (post.mediaUrl) {
+        // В ВК аттачменты передаются в формате <type><owner_id>_<media_id>
+        // Если это просто ссылка, ВК может её распарсить сам, если передать в attachments
+        params.attachments = post.mediaUrl;
+      }
+
+      const response = await axios.get('https://api.vk.com/method/wall.post', { params });
+
+      if (response.data.error) {
+        throw new Error(`VK Publish Error: ${response.data.error.error_msg}`);
+      }
+
+      console.log(`✅ Post ${post.id} published to VK. Post ID: ${response.data.response.post_id}`);
+      return response.data.response.post_id;
+    } catch (error) {
+      console.error('❌ Failed to publish post to VK:', error.message);
+      throw error;
     }
   }
 }

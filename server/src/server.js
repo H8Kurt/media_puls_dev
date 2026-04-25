@@ -4,6 +4,7 @@ const app = require('./app');
 const { initModels } = require('./models');
 const initVkJobs = require('./jobs/vkStatsJob');
 const initBot = require('./bot');
+const initVkBot = require('./bot/vkBot');
 
 const PORT = Number(process.env.PORT) || 4000;
 
@@ -12,6 +13,7 @@ const startServer = async () => {
     await initModels();
     initVkJobs(); // Инициализация сбора статистики ВК
     initBot();    // Запуск Telegram-бота
+    initVkBot();  // Запуск ВК-бота
     app.listen(PORT, () => {
       console.log(`Server started on port ${PORT}`);
     });
