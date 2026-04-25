@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Plus, 
   Clock, 
@@ -12,6 +12,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import mockData from '../../../mock_data.json';
+import CreatePostModal from '../components/CreatePostModal';
 
 const STATUS_LABELS = {
   draft: 'Черновик',
@@ -24,7 +25,8 @@ const CATEGORY_LABELS = {
   event: 'Мероприятие',
   news: 'Новости',
   vacancy: 'Вакансия',
-  grant: 'Грант'
+  grant: 'Грант',
+  results: 'Итоги'
 };
 
 const PostsListPage = () => {
@@ -34,14 +36,28 @@ const PostsListPage = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [localPosts, setLocalPosts] = useState([]);
 
-  // Подготовка данных с добавлением статусов (как в календаре)
-  const allPosts = useMemo(() => {
-    return mockData.posts.map(p => ({
-      ...p,
-      status: p.id % 4 === 0 ? 'error' : p.id % 3 === 0 ? 'published' : p.id % 2 === 0 ? 'scheduled' : 'draft'
-    }));
+  // Загрузка локальных постов
+  useEffect(() => {
+    const saved = localStorage.getItem('user_posts');
+    if (saved) {
+      setLocalPosts(JSON.parse(saved));
+    }
   }, []);
+
+  // Подготовка данных
+  const allPosts = useMemo(() => {
+    const initialPosts = mockData.posts.map(p => ({
+      ...p,
+      status: 'published' // Все посты из mock_data теперь опубликованы
+    }));
+    
+    // Объединяем моки и локальные посты
+    const combined = [...localPosts, ...initialPosts];
+    return combined;
+  }, [localPosts]);
 
   // Логика фильтрации
   const filteredPosts = useMemo(() => {
@@ -55,8 +71,16 @@ const PostsListPage = () => {
       const matchesEndDate = !endDate || postDate <= new Date(endDate);
 
       return matchesSearch && matchesStatus && matchesCategory && matchesStartDate && matchesEndDate;
-    }).sort((a, b) => new Date(b.publish_date) - new Date(a.publish_date));
+    }).sort((a, b) => {
+      const dateA = new Date(`${a.publish_date}T${a.publish_time || '00:00'}`);
+      const dateB = new Date(`${b.publish_date}T${b.publish_time || '00:00'}`);
+      return dateB - dateA;
+    });
   }, [allPosts, searchQuery, statusFilter, categoryFilter, startDate, endDate]);
+
+  const handleSavePost = (newPost) => {
+    setLocalPosts(prev => [newPost, ...prev]);
+  };
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
@@ -66,11 +90,20 @@ const PostsListPage = () => {
           <p className="text-slate-500 text-sm mt-1">Список всех публикаций и управление фильтрами</p>
         </div>
         
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-indigo-100 font-medium text-sm">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-indigo-100 font-medium text-sm"
+        >
           <Plus size={18} />
           Создать пост
         </button>
       </div>
+
+      <CreatePostModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSave={handleSavePost}
+      />
 
       {/* Блок фильтров */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm mb-6">

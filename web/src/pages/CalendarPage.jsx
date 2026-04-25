@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -13,6 +13,7 @@ import {
   FileEdit
 } from 'lucide-react';
 import mockData from '../../../mock_data.json';
+import CreatePostModal from '../components/CreatePostModal';
 
 const STATUS_CONFIG = {
   draft: { color: 'bg-slate-500', icon: FileEdit, label: 'Черновик', text: 'text-slate-600', bg: 'bg-slate-50' },
@@ -24,11 +25,28 @@ const STATUS_CONFIG = {
 const CalendarPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 3, 25)); // Апрель 2026
   const [view, setView] = useState('month'); // month, week, day
-  const [posts, setPosts] = useState(mockData.posts.map(p => ({
-    ...p,
-    // Добавляем статусы для демонстрации
-    status: p.id % 4 === 0 ? 'error' : p.id % 3 === 0 ? 'published' : p.id % 2 === 0 ? 'scheduled' : 'draft'
-  })));
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [localPosts, setLocalPosts] = useState([]);
+
+  // Загрузка локальных постов
+  useEffect(() => {
+    const saved = localStorage.getItem('user_posts');
+    if (saved) {
+      setLocalPosts(JSON.parse(saved));
+    }
+  }, []);
+
+  const posts = useMemo(() => {
+    const initialPosts = mockData.posts.map(p => ({
+      ...p,
+      status: 'published' // Все посты из mock_data теперь опубликованы
+    }));
+    return [...localPosts, ...initialPosts];
+  }, [localPosts]);
+
+  const handleSavePost = (newPost) => {
+    setLocalPosts(prev => [newPost, ...prev]);
+  };
 
   const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
   const daysOfWeek = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -76,7 +94,29 @@ const CalendarPage = () => {
 
   const onDrop = (e, dateString) => {
     const postId = parseInt(e.dataTransfer.getData('postId'));
-    setPosts(prev => prev.map(p => p.id === postId ? { ...p, publish_date: dateString } : p));
+    
+    // Проверяем, является ли пост локальным или из моков
+    const isLocal = localPosts.some(p => p.id === postId);
+
+    if (isLocal) {
+      const updatedLocal = localPosts.map(p => 
+        p.id === postId ? { ...p, publish_date: dateString } : p
+      );
+      setLocalPosts(updatedLocal);
+      localStorage.setItem('user_posts', JSON.stringify(updatedLocal));
+    } else {
+      // Если пост из моков, мы можем либо запретить перенос, 
+      // либо превратить его в "локальный" для сохранения изменений.
+      // Для простоты сейчас обновим его в общем списке (но он не сохранится в localStorage как новый, если мы так не решим)
+      // Однако, чтобы drag-and-drop работал визуально для всех:
+      const postToMove = posts.find(p => p.id === postId);
+      if (postToMove) {
+        const updatedPost = { ...postToMove, publish_date: dateString };
+        const updatedLocal = [...localPosts.filter(p => p.id !== postId), updatedPost];
+        setLocalPosts(updatedLocal);
+        localStorage.setItem('user_posts', JSON.stringify(updatedLocal));
+      }
+    }
   };
 
   const allowDrop = (e) => e.preventDefault();
@@ -106,11 +146,20 @@ const CalendarPage = () => {
             <button onClick={handleNext} className="p-2 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors bg-white"><ChevronRight size={18} /></button>
           </div>
 
-          <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-indigo-100 font-medium text-sm ml-2">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-indigo-100 font-medium text-sm ml-2"
+          >
             <Plus size={18} /> Создать пост
           </button>
         </div>
       </div>
+
+      <CreatePostModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSave={handleSavePost}
+      />
 
       <div className="flex gap-6 mb-6 px-2">
         {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
@@ -153,14 +202,17 @@ const CalendarPage = () => {
                         return (
                           <div 
                             key={post.id}
-                            draggable
-                            onDragStart={(e) => onDragStart(e, post.id)}
+                            draggable={post.status !== 'published'}
+                            onDragStart={(e) => post.status !== 'published' && onDragStart(e, post.id)}
                             onClick={() => alert(`Редактирование поста: ${post.title}`)}
-                            className={`${cfg.bg} border border-transparent hover:border-indigo-200 p-2 rounded-lg cursor-pointer group transition-all shadow-sm hover:shadow-md`}
+                            className={`${cfg.bg} border border-transparent ${post.status !== 'published' ? 'hover:border-indigo-200 cursor-grab active:cursor-grabbing' : 'opacity-80 cursor-default'} p-2 rounded-lg group transition-all shadow-sm hover:shadow-md`}
                           >
                             <div className="flex items-center gap-1.5 mb-1">
                               <div className={`w-1.5 h-1.5 rounded-full ${cfg.color}`}></div>
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{post.publish_time}</span>
+                              {post.status === 'published' && (
+                                <span className="ml-auto text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 rounded">FIXED</span>
+                              )}
                             </div>
                             <div className="text-[11px] font-semibold text-slate-700 leading-tight line-clamp-2 group-hover:text-indigo-700">{post.title}</div>
                             <div className="flex items-center justify-between mt-2">
