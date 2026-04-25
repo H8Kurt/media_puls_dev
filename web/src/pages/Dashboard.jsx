@@ -9,7 +9,7 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from 'recharts';
-import { TrendingUp, Users, MessageSquare, Share2, Eye } from 'lucide-react';
+import { TrendingUp, Users, MessageSquare, Share2, Eye, FileText, Download } from 'lucide-react';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({ posts: [], groupStats: [] });
@@ -83,9 +83,27 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-8">
-      <header>
-        <h2 className="text-2xl font-bold text-gray-800">Аналитика ВКонтакте</h2>
-        <p className="text-gray-500">Реальные данные из вашего сообщества.</p>
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Аналитика ВКонтакте</h2>
+          <p className="text-gray-500">Реальные данные из вашего сообщества.</p>
+        </div>
+        <div className="flex gap-3">
+          <a 
+            href="/api/export/excel" 
+            className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
+          >
+            <Download size={18} className="text-green-600" />
+            Excel
+          </a>
+          <a 
+            href="/api/export/pdf" 
+            className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
+          >
+            <FileText size={18} className="text-red-600" />
+            PDF Отчет
+          </a>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

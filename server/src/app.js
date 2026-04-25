@@ -4,6 +4,7 @@ const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 const statsRoutes = require('./routes/statsRoutes');
 const moderationRoutes = require('./routes/moderationRoutes');
+const exportRoutes = require('./routes/exportRoutes');
 
 const app = express();
 
@@ -18,5 +19,6 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/moderation', moderationRoutes);
+app.use('/api/export', exportRoutes);
 
 module.exports = app;
