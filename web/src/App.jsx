@@ -2,11 +2,9 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from './components/DashboardLayout';
 import Dashboard from './pages/Dashboard';
-
-// Заглушки для страниц, которыми занимается другой разработчик
-const Landing = () => <div className="p-8">Страница Лендинга (в разработке)</div>;
-const Login = () => <div className="p-8">Страница Входа (в разработке)</div>;
-const Register = () => <div className="p-8">Страница Регистрации (в разработке)</div>;
+import Landing from './pages/Landing';
+import Login from './pages/Login';
+import Register from './pages/Register';
 
 // Заглушки для подразделов дашборда
 const ContentPlan = () => <div className="p-8 text-2xl font-bold">Контент-план (в разработке)</div>;
