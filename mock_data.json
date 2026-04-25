@@ -1,0 +1,30 @@
+{
+  "posts": [
+    {"id":1,"title":"🔥 Старт регистрации на хакатон «ПроТехно»","category":"event","publish_date":"2026-04-01","publish_time":"10:00","channel":"telegram","views":2450,"reactions":187,"comments":23,"shares":45},
+    {"id":2,"title":"Итоги мартовского марафона: цифры и эмоции","category":"news","publish_date":"2026-04-02","publish_time":"15:30","channel":"vk","views":890,"reactions":67,"comments":8,"shares":12},
+    {"id":3,"title":"Центр «Зеркало» ищет SMM-менеджера 🔥","category":"vacancy","publish_date":"2026-04-03","publish_time":"12:00","channel":"telegram","views":1560,"reactions":234,"comments":45,"shares":67},
+    {"id":4,"title":"Гранты до 500 тыс. на молодёжные проекты","category":"grant","publish_date":"2026-04-04","publish_time":"09:00","channel":"vk","views":3200,"reactions":412,"comments":89,"shares":156},
+    {"id":5,"title":"Вечер настолок в «Своём деле» — приходи!","category":"event","publish_date":"2026-04-05","publish_time":"18:00","channel":"telegram","views":2100,"reactions":345,"comments":56,"shares":34},
+    {"id":6,"title":"Как прошёл образовательный интенсив","category":"news","publish_date":"2026-04-07","publish_time":"11:00","channel":"telegram","views":980,"reactions":78,"comments":12,"shares":9},
+    {"id":7,"title":"Волонтёры на фестиваль «Красноярск молодой»","category":"vacancy","publish_date":"2026-04-08","publish_time":"14:00","channel":"vk","views":670,"reactions":89,"comments":14,"shares":23},
+    {"id":8,"title":"Открыт приём заявок на «Росмолодёжь.Гранты»","category":"grant","publish_date":"2026-04-09","publish_time":"16:00","channel":"telegram","views":4100,"reactions":567,"comments":123,"shares":289},
+    {"id":9,"title":"Мастер-класс по съёмке рилс","category":"event","publish_date":"2026-04-10","publish_time":"10:00","channel":"vk","views":1230,"reactions":145,"comments":23,"shares":18},
+    {"id":10,"title":"Кинопоказ с обсуждением: «Движение вверх»","category":"event","publish_date":"2026-04-12","publish_time":"19:00","channel":"telegram","views":1870,"reactions":234,"comments":45,"shares":27},
+    {"id":11,"title":"5 причин прийти на День открытых дверей","category":"news","publish_date":"2026-04-13","publish_time":"09:30","channel":"telegram","views":1430,"reactions":112,"comments":18,"shares":22},
+    {"id":12,"title":"Ивент-менеджер в Краевой дворец молодёжи","category":"vacancy","publish_date":"2026-04-14","publish_time":"13:00","channel":"telegram","views":2100,"reactions":278,"comments":34,"shares":41},
+    {"id":13,"title":"Конкурс социальных проектов «Территория 2026»","category":"grant","publish_date":"2026-04-15","publish_time":"11:00","channel":"vk","views":2870,"reactions":345,"comments":67,"shares":98},
+    {"id":14,"title":"Квиз «Мемология» для команд до 5 человек","category":"event","publish_date":"2026-04-16","publish_time":"17:00","channel":"telegram","views":3450,"reactions":478,"comments":89,"shares":56},
+    {"id":15,"title":"Итоги недели: 8 мероприятий, 450 участников","category":"news","publish_date":"2026-04-18","publish_time":"10:30","channel":"vk","views":1120,"reactions":98,"comments":15,"shares":21},
+    {"id":16,"title":"Пикник с настолками в парке Гагарина","category":"event","publish_date":"2026-04-19","publish_time":"15:00","channel":"telegram","views":2780,"reactions":389,"comments":67,"shares":43},
+    {"id":17,"title":"Копирайтер в молодёжный медиацентр","category":"vacancy","publish_date":"2026-04-20","publish_time":"12:00","channel":"vk","views":890,"reactions":123,"comments":21,"shares":12},
+    {"id":18,"title":"Стартап-тур: грант до 1 млн рублей","category":"grant","publish_date":"2026-04-21","publish_time":"14:00","channel":"telegram","views":5200,"reactions":678,"comments":156,"shares":345},
+    {"id":19,"title":"Открытый микрофон: стендап от молодых комиков","category":"event","publish_date":"2026-04-22","publish_time":"19:00","channel":"telegram","views":1900,"reactions":267,"comments":48,"shares":29},
+    {"id":20,"title":"Анонс мероприятий на майские праздники","category":"news","publish_date":"2026-04-24","publish_time":"11:00","channel":"telegram","views":1650,"reactions":145,"comments":27,"shares":18}
+  ],
+  "summary": {
+    "total_posts": 20,
+    "total_views": 38940,
+    "total_reactions": 4762,
+    "avg_er_percent": 12.2
+  }
+}
