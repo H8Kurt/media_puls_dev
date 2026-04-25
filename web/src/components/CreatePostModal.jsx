@@ -26,6 +26,8 @@ const CHANNELS = [
 ];
 
 const CreatePostModal = ({ isOpen, onClose, onSave, initialData = null }) => {
+  const isViewOnly = initialData?.status === 'published';
+  
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -118,9 +120,14 @@ const CreatePostModal = ({ isOpen, onClose, onSave, initialData = null }) => {
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <h2 className="text-xl font-bold text-slate-800">
-            {initialData ? 'Модерация публикации' : 'Создание публикации'}
+            {isViewOnly ? 'Просмотр публикации' : initialData ? 'Редактирование публикации' : 'Создание публикации'}
           </h2>
           <div className="flex items-center gap-4">
+            {isViewOnly && (
+              <div className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold flex items-center gap-1">
+                <Check size={14} /> Опубликовано
+              </div>
+            )}
             {formData.author && (
               <div className="flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">
                 <User size={14} />
@@ -141,10 +148,11 @@ const CreatePostModal = ({ isOpen, onClose, onSave, initialData = null }) => {
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Название поста</label>
                 <input
                   type="text"
+                  disabled={isViewOnly}
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Введите заголовок..."
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all outline-none"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all outline-none disabled:opacity-70"
                 />
               </div>
 
@@ -152,10 +160,11 @@ const CreatePostModal = ({ isOpen, onClose, onSave, initialData = null }) => {
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Содержание</label>
                 <textarea
                   rows="8"
+                  disabled={isViewOnly}
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                   placeholder="О чем будет пост?"
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all outline-none resize-none"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all outline-none resize-none disabled:opacity-70"
                 ></textarea>
               </div>
 
@@ -194,12 +203,13 @@ const CreatePostModal = ({ isOpen, onClose, onSave, initialData = null }) => {
                   {Object.entries(TEMPLATES).map(([key, t]) => (
                     <button
                       key={key}
+                      disabled={isViewOnly}
                       onClick={() => handleTemplateSelect(key)}
                       className={`text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${
                         formData.category === key 
                         ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
                         : 'bg-white border-slate-100 text-slate-600 hover:border-slate-300'
-                      }`}
+                      } disabled:opacity-50`}
                     >
                       {t.title}
                     </button>
@@ -214,12 +224,13 @@ const CreatePostModal = ({ isOpen, onClose, onSave, initialData = null }) => {
                   {CHANNELS.map(ch => (
                     <button
                       key={ch.id}
+                      disabled={isViewOnly}
                       onClick={() => handleChannelToggle(ch.id)}
                       className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                         formData.channels.includes(ch.id)
                         ? 'bg-slate-800 text-white shadow-lg shadow-slate-200'
                         : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                      }`}
+                      } disabled:opacity-50`}
                     >
                       {formData.channels.includes(ch.id) && <Check size={14} />}
                       {ch.name}
@@ -236,17 +247,19 @@ const CreatePostModal = ({ isOpen, onClose, onSave, initialData = null }) => {
                 <div className="space-y-3">
                   <input
                     type="date"
+                    disabled={isViewOnly}
                     value={formData.publishDate}
                     onChange={(e) => setFormData({ ...formData, publishDate: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-400"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-400 disabled:opacity-70"
                   />
                   <div className="flex items-center gap-2">
                     <Clock size={16} className="text-slate-400" />
                     <input
                       type="time"
+                      disabled={isViewOnly}
                       value={formData.publishTime}
                       onChange={(e) => setFormData({ ...formData, publishTime: e.target.value })}
-                      className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-400"
+                      className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-400 disabled:opacity-70"
                     />
                   </div>
                 </div>
@@ -257,29 +270,42 @@ const CreatePostModal = ({ isOpen, onClose, onSave, initialData = null }) => {
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
-          <button
-            onClick={() => handleSubmit('draft')}
-            className="flex items-center gap-2 px-5 py-2.5 text-slate-600 hover:text-slate-800 font-semibold transition-colors"
-          >
-            <Save size={18} />
-            В черновики
-          </button>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="px-5 py-2.5 text-slate-500 font-semibold hover:bg-slate-100 rounded-xl transition-colors"
-            >
-              Отмена
-            </button>
-            <button
-              onClick={() => handleSubmit('scheduled')}
-              disabled={!formData.title || formData.channels.length === 0}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-indigo-100"
-            >
-              <Send size={18} />
-              Опубликовать
-            </button>
-          </div>
+          {!isViewOnly ? (
+            <>
+              <button
+                onClick={() => handleSubmit('draft')}
+                className="flex items-center gap-2 px-5 py-2.5 text-slate-600 hover:text-slate-800 font-semibold transition-colors"
+              >
+                <Save size={18} />
+                В черновики
+              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={onClose}
+                  className="px-5 py-2.5 text-slate-500 font-semibold hover:bg-slate-100 rounded-xl transition-colors"
+                >
+                  Отмена
+                </button>
+                <button
+                  onClick={() => handleSubmit('scheduled')}
+                  disabled={!formData.title || formData.channels.length === 0}
+                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-indigo-100"
+                >
+                  <Send size={18} />
+                  {initialData ? 'Сохранить' : 'Опубликовать'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="w-full flex justify-end">
+              <button
+                onClick={onClose}
+                className="px-8 py-2.5 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all"
+              >
+                Закрыть
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

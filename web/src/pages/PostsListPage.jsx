@@ -37,6 +37,7 @@ const PostsListPage = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
   const [localPosts, setLocalPosts] = useState([]);
 
 
@@ -83,6 +84,11 @@ const PostsListPage = () => {
     setLocalPosts(prev => [newPost, ...prev]);
   };
 
+  const handlePostClick = (post) => {
+    setSelectedPost(post);
+    setIsModalOpen(true);
+  };
+
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
@@ -99,12 +105,6 @@ const PostsListPage = () => {
           Создать пост
         </button>
       </div>
-
-      <CreatePostModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSave={handleSavePost}
-      />
 
       {/* Блок фильтров */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm mb-6">
@@ -191,7 +191,11 @@ const PostsListPage = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredPosts.length > 0 ? filteredPosts.map((post) => (
-                <tr key={post.id} className="hover:bg-slate-50/50 transition-colors group">
+                <tr 
+                  key={post.id} 
+                  onClick={() => handlePostClick(post)}
+                  className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
+                >
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-slate-700">{post.publish_date}</span>
@@ -252,8 +256,19 @@ const PostsListPage = () => {
           <span className="text-sm text-slate-500">Найдено {filteredPosts.length} записей</span>
         </div>
       </div>
+
+      <CreatePostModal 
+        isOpen={isModalOpen} 
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedPost(null);
+        }} 
+        onSave={handleSavePost}
+        initialData={selectedPost}
+      />
     </div>
   );
 };
+
 
 export default PostsListPage;

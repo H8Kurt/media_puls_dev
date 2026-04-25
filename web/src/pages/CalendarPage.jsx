@@ -26,6 +26,7 @@ const CalendarPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 3, 25)); // Апрель 2026
   const [view, setView] = useState('month'); // month, week, day
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
   const [localPosts, setLocalPosts] = useState([]);
 
 
@@ -47,6 +48,11 @@ const CalendarPage = () => {
 
   const handleSavePost = (newPost) => {
     setLocalPosts(prev => [newPost, ...prev]);
+  };
+
+  const handlePostClick = (post) => {
+    setSelectedPost(post);
+    setIsModalOpen(true);
   };
 
   const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
@@ -156,12 +162,6 @@ const CalendarPage = () => {
         </div>
       </div>
 
-      <CreatePostModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSave={handleSavePost}
-      />
-
       <div className="flex gap-6 mb-6 px-2">
         {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
           <div key={key} className="flex items-center gap-2 text-xs font-medium text-slate-500">
@@ -205,8 +205,8 @@ const CalendarPage = () => {
                             key={post.id}
                             draggable={post.status !== 'published'}
                             onDragStart={(e) => post.status !== 'published' && onDragStart(e, post.id)}
-                            onClick={() => alert(`Редактирование поста: ${post.title}`)}
-                            className={`${cfg.bg} border border-transparent ${post.status !== 'published' ? 'hover:border-indigo-200 cursor-grab active:cursor-grabbing' : 'opacity-80 cursor-default'} p-2 rounded-lg group transition-all shadow-sm hover:shadow-md`}
+                            onClick={() => handlePostClick(post)}
+                            className={`${cfg.bg} border border-transparent ${post.status !== 'published' ? 'hover:border-indigo-200 cursor-grab active:cursor-grabbing' : 'opacity-80 cursor-pointer'} p-2 rounded-lg group transition-all shadow-sm hover:shadow-md`}
                           >
                             <div className="flex items-center gap-1.5 mb-1">
                               <div className={`w-1.5 h-1.5 rounded-full ${cfg.color}`}></div>
@@ -237,6 +237,16 @@ const CalendarPage = () => {
           </div>
         )}
       </div>
+
+      <CreatePostModal 
+        isOpen={isModalOpen} 
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedPost(null);
+        }} 
+        onSave={handleSavePost}
+        initialData={selectedPost}
+      />
     </div>
   );
 };
