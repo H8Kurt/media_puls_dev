@@ -4,19 +4,30 @@ const sequelize = require('../config/database');
 const PendingPost = sequelize.define('PendingPost', {
   telegramId: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   authorName: {
     type: DataTypes.STRING,
   },
-  text: {
+  title: {
+    type: DataTypes.STRING,
+  },
+  content: {
     type: DataTypes.TEXT,
   },
-  mediaUrl: {
-    type: DataTypes.STRING, // Ссылка на фото/видео
+  scheduledAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  platform: {
+    type: DataTypes.STRING,
+    defaultValue: 'vk',
+  },
+  category: {
+    type: DataTypes.STRING,
   },
   status: {
-    type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+    type: DataTypes.ENUM('pending', 'approved', 'rejected', 'scheduled', 'published', 'error'),
     defaultValue: 'pending',
   },
 });

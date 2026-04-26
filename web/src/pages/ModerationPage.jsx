@@ -13,15 +13,9 @@ import {
   Calendar as CalendarIcon,
   Eye
 } from 'lucide-react';
-
+import api from '../api/axios';
 import CreatePostModal from '../components/CreatePostModal';
 
-const MODERATION_POSTS = [
-  { id: 101, title: 'Репортаж с открытия коворкинга', author: 'Иван Иванов', category: 'news', publish_date: '2026-04-27', publish_time: '14:00', status: 'pending', content: 'Текст поста от волонтера...' },
-  { id: 102, title: 'Интервью с победителем гранта', author: 'Анна Сидорова', category: 'grant', publish_date: '2026-04-27', publish_time: '16:30', status: 'pending', content: 'Текст поста от волонтера...' },
-  { id: 103, title: 'Подборка книг на выходные', author: 'Петр Петров', category: 'event', publish_date: '2026-04-28', publish_time: '10:00', status: 'pending', content: 'Текст поста от волонтера...' },
-  { id: 104, title: 'Анонс волонтерского сбора', author: 'Мария Лукьянова', category: 'event', publish_date: '2026-04-26', publish_time: '09:00', status: 'pending', content: 'Текст поста от волонтера...' }
-];
 
 const CATEGORY_LABELS = {
   event: 'Мероприятие',
@@ -32,34 +26,85 @@ const CATEGORY_LABELS = {
 
 const ModerationPage = () => {
   const [view, setView] = useState('calendar'); // calendar, list
-  const [posts, setPosts] = useState(MODERATION_POSTS);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 3, 26));
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedPost, setSelectedPost] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const fetchModerationPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/moderation');
+      setPosts(response.data);
+    } catch (error) {
+      console.error('Ошибка при загрузке модерации:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchModerationPosts();
+  }, []);
+
+  const handleAction = async (id, newStatus) => {
+    try {
+      await api.patch(`/posts/${id}/status`, { status: newStatus });
+      setPosts(prev => prev.filter(p => p.id !== id));
+    } catch (error) {
+      console.error('Ошибка при обновлении статуса:', error);
+    }
+  };
+
+  const handleSaveModerated = async (updatedData) => {
+    try {
+      // Проверяем дату из разных возможных полей (publishDate или publish_date)
+      const publishDate = updatedData.publishDate || updatedData.publish_date;
+      const publishTime = updatedData.publishTime || updatedData.publish_time || '12:00';
+      
+      if (!publishDate) {
+        alert('Пожалуйста, выберите дату публикации');
+        return;
+      }
+
+      await api.patch(`/posts/${selectedPost.id}/status`, { 
+        status: 'scheduled',
+        title: updatedData.title,
+        content: updatedData.content,
+        category: updatedData.category,
+        media: updatedData.media,
+        scheduledAt: `${publishDate}T${publishTime}:00`
+      });
+      
+      fetchModerationPosts();
+      setIsModalOpen(false);
+      setSelectedPost(null);
+    } catch (error) {
+      console.error('Ошибка при одобрении поста:', error);
+    }
+  };
+
   const filteredPosts = useMemo(() => {
     return posts.filter(p => {
-      const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.author.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = (p.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           (p.author || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
+      
+      if (!p.publish_date) return matchesSearch && matchesCategory;
       
       const postDate = new Date(p.publish_date);
       const matchesStartDate = !startDate || postDate >= new Date(startDate);
       const matchesEndDate = !endDate || postDate <= new Date(endDate);
 
       return matchesSearch && matchesCategory && matchesStartDate && matchesEndDate;
-    }).sort((a, b) => new Date(a.publish_date) - new Date(b.publish_date));
+    }).sort((a, b) => new Date(a.publish_date || a.createdAt) - new Date(b.publish_date || b.createdAt));
   }, [posts, searchQuery, categoryFilter, startDate, endDate]);
 
-  const handleAction = (id, newStatus) => {
-    setPosts(prev => prev.filter(p => p.id !== id));
-    alert(newStatus === 'approved' ? 'Пост одобрен и перенесен в контент-план' : 'Пост отклонен');
-  };
-
-  // Календарная сетка (упрощенная для модерации)
   const calendarDays = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -78,18 +123,11 @@ const ModerationPage = () => {
     return days;
   }, [currentDate]);
 
-
   const handleEdit = (post) => {
     setSelectedPost(post);
     setIsModalOpen(true);
   };
 
-  const handleSaveModerated = (updatedPost) => {
-    // Удаляем из списка модерации
-    setPosts(prev => prev.filter(p => p.id !== selectedPost.id));
-    setIsModalOpen(false);
-    setSelectedPost(null);
-  };
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto">

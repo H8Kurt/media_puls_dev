@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from '../api/axios';
 import { X, Image, Video, Calendar, Clock, Send, Save, FileText, Check, Plus, User } from 'lucide-react';
 
 const TEMPLATES = {
@@ -44,13 +45,27 @@ const CreatePostModal = ({ isOpen, onClose, onSave, initialData = null }) => {
 
   useEffect(() => {
     if (initialData) {
+      const now = new Date();
+      const defaultDate = now.toLocaleDateString('en-CA');
+      const defaultTime = now.toTimeString().split(' ')[0].substring(0, 5);
+
       setFormData({
-        ...initialData,
-        publishDate: initialData.publish_date || '',
-        publishTime: initialData.publish_time || '',
-        channels: initialData.channels || []
+        title: initialData.title || '',
+        content: initialData.content || initialData.text || '',
+        category: initialData.category || 'event',
+        channels: initialData.channel ? [initialData.channel] : (initialData.channels || []),
+        publishDate: initialData.publish_date || defaultDate, // Подставляем текущую дату, если пусто
+        publishTime: initialData.publish_time || defaultTime, // Подставляем текущее время, если пусто
+        status: initialData.status || 'draft',
+        media: initialData.media || [],
+        author: initialData.author || initialData.authorName || ''
       });
-      // Если есть медиа в initialData, здесь можно было бы настроить превью
+      // Устанавливаем превью для существующих медиа
+      if (initialData.media && Array.isArray(initialData.media)) {
+        setPreviews(initialData.media);
+      } else if (initialData.mediaUrl) {
+        setPreviews([initialData.mediaUrl]);
+      }
     } else {
       setFormData({
         title: '',
@@ -84,30 +99,37 @@ const CreatePostModal = ({ isOpen, onClose, onSave, initialData = null }) => {
     }));
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const files = Array.from(e.target.files);
-    const newPreviews = files.map(file => URL.createObjectURL(file));
-    setPreviews(prev => [...prev, ...newPreviews]);
-    setFormData(prev => ({ ...prev, media: [...prev.media, ...files] }));
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const response = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        const fileUrl = response.data.url;
+        setPreviews(prev => [...prev, fileUrl]);
+        setFormData(prev => ({ ...prev, media: [...prev.media, fileUrl] }));
+      } catch (err) {
+        console.error('Ошибка загрузки файла:', err);
+      }
+    }
   };
 
   const handleSubmit = (status) => {
-    const now = new Date();
-    const currentDate = now.toISOString().split('T')[0];
-    const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
-
     const postData = {
-      ...formData,
-      id: Date.now(),
-      status: status || formData.status,
-      publish_date: formData.publishDate || currentDate,
-      publish_time: formData.publishTime || currentTime,
+      title: formData.title,
+      content: formData.content,
+      category: formData.category,
+      platform: formData.channels[0] || 'vk',
+      publishDate: formData.publishDate, // Добавляем явно для валидации
+      publishTime: formData.publishTime, // Добавляем явно для валидации
+      scheduledAt: `${formData.publishDate}T${formData.publishTime || '00:00'}:00`,
+      status: status || 'scheduled',
+      media: formData.media
     };
 
-    // Сохранение в LocalStorage
-    const existingPosts = JSON.parse(localStorage.getItem('user_posts') || '[]');
-    localStorage.setItem('user_posts', JSON.stringify([...existingPosts, postData]));
-    
     if (onSave) onSave(postData);
     onClose();
   };

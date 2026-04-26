@@ -11,7 +11,7 @@ import {
   Calendar as CalendarIcon,
   ChevronDown
 } from 'lucide-react';
-import mockData from '../../../mock_data.json';
+import api from '../api/axios';
 import CreatePostModal from '../components/CreatePostModal';
 
 const STATUS_LABELS = {
@@ -38,33 +38,29 @@ const PostsListPage = () => {
   const [endDate, setEndDate] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
-  const [localPosts, setLocalPosts] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-
-  // Загрузка локальных постов
-  useEffect(() => {
-    const saved = localStorage.getItem('user_posts');
-    if (saved) {
-      setLocalPosts(JSON.parse(saved));
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/posts');
+      setPosts(response.data);
+    } catch (error) {
+      console.error('Ошибка при загрузке постов:', error);
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  };
 
-  // Подготовка данных
-  const allPosts = useMemo(() => {
-    const initialPosts = mockData.posts.map(p => ({
-      ...p,
-      status: 'published' // Все посты из mock_data теперь опубликованы
-    }));
-    
-    // Объединяем моки и локальные посты
-    const combined = [...localPosts, ...initialPosts];
-    return combined;
-  }, [localPosts]);
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   // Логика фильтрации
   const filteredPosts = useMemo(() => {
-    return allPosts.filter(post => {
-      const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return posts.filter(post => {
+      const matchesSearch = (post.title || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
       const matchesCategory = categoryFilter === 'all' || post.category === categoryFilter;
       
@@ -78,10 +74,20 @@ const PostsListPage = () => {
       const dateB = new Date(`${b.publish_date}T${b.publish_time || '00:00'}`);
       return dateB - dateA;
     });
-  }, [allPosts, searchQuery, statusFilter, categoryFilter, startDate, endDate]);
+  }, [posts, searchQuery, statusFilter, categoryFilter, startDate, endDate]);
 
-  const handleSavePost = (newPost) => {
-    setLocalPosts(prev => [newPost, ...prev]);
+  const handleSavePost = async (postData) => {
+    try {
+      if (selectedPost) {
+        await api.put(`/posts/${selectedPost.id}`, postData);
+      } else {
+        await api.post('/posts', postData);
+      }
+      fetchPosts();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Ошибка при сохранении поста:', error);
+    }
   };
 
   const handlePostClick = (post) => {

@@ -12,42 +12,54 @@ import {
   Clock3,
   FileEdit
 } from 'lucide-react';
-import mockData from '../../../mock_data.json';
+import api from '../api/axios';
 import CreatePostModal from '../components/CreatePostModal';
 
 const STATUS_CONFIG = {
   draft: { color: 'bg-slate-500', icon: FileEdit, label: 'Черновик', text: 'text-slate-600', bg: 'bg-slate-50' },
+  pending: { color: 'bg-indigo-500', icon: Clock3, label: 'На модерации', text: 'text-indigo-600', bg: 'bg-indigo-50' },
   scheduled: { color: 'bg-amber-500', icon: Clock3, label: 'Запланирован', text: 'text-amber-600', bg: 'bg-amber-50' },
   published: { color: 'bg-emerald-500', icon: CheckCircle2, label: 'Опубликован', text: 'text-emerald-600', bg: 'bg-emerald-50' },
   error: { color: 'bg-rose-500', icon: AlertCircle, label: 'Ошибка', text: 'text-rose-600', bg: 'bg-rose-50' }
 };
 
 const CalendarPage = () => {
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 3, 25)); // Апрель 2026
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('month'); // month, week, day
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
-  const [localPosts, setLocalPosts] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-
-  // Загрузка локальных постов
-  useEffect(() => {
-    const saved = localStorage.getItem('user_posts');
-    if (saved) {
-      setLocalPosts(JSON.parse(saved));
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/posts');
+      setPosts(response.data);
+    } catch (error) {
+      console.error('Ошибка при загрузке постов:', error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchPosts();
   }, []);
 
-  const posts = useMemo(() => {
-    const initialPosts = mockData.posts.map(p => ({
-      ...p,
-      status: 'published' // Все посты из mock_data теперь опубликованы
-    }));
-    return [...localPosts, ...initialPosts];
-  }, [localPosts]);
-
-  const handleSavePost = (newPost) => {
-    setLocalPosts(prev => [newPost, ...prev]);
+  const handleSavePost = async (postData) => {
+    try {
+      if (selectedPost) {
+        const realId = String(selectedPost.id).replace('pend_', '');
+        await api.patch(`/posts/${realId}/status`, postData);
+      } else {
+        await api.post('/posts', postData);
+      }
+      fetchPosts();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Ошибка при сохранении поста:', error);
+    }
   };
 
   const handlePostClick = (post) => {
@@ -99,29 +111,20 @@ const CalendarPage = () => {
     e.dataTransfer.setData('postId', postId);
   };
 
-  const onDrop = (e, dateString) => {
-    const postId = parseInt(e.dataTransfer.getData('postId'));
-    
-    // Проверяем, является ли пост локальным или из моков
-    const isLocal = localPosts.some(p => p.id === postId);
+  const onDrop = async (e, dateString) => {
+    const postIdStr = e.dataTransfer.getData('postId');
+    const post = posts.find(p => p.id === postIdStr);
 
-    if (isLocal) {
-      const updatedLocal = localPosts.map(p => 
-        p.id === postId ? { ...p, publish_date: dateString } : p
-      );
-      setLocalPosts(updatedLocal);
-      localStorage.setItem('user_posts', JSON.stringify(updatedLocal));
-    } else {
-      // Если пост из моков, мы можем либо запретить перенос, 
-      // либо превратить его в "локальный" для сохранения изменений.
-      // Для простоты сейчас обновим его в общем списке (но он не сохранится в localStorage как новый, если мы так не решим)
-      // Однако, чтобы drag-and-drop работал визуально для всех:
-      const postToMove = posts.find(p => p.id === postId);
-      if (postToMove) {
-        const updatedPost = { ...postToMove, publish_date: dateString };
-        const updatedLocal = [...localPosts.filter(p => p.id !== postId), updatedPost];
-        setLocalPosts(updatedLocal);
-        localStorage.setItem('user_posts', JSON.stringify(updatedLocal));
+    if (post && post.status !== 'published') {
+      try {
+        // Убираем префикс pend_ для запроса к БД
+        const realId = postIdStr.replace('pend_', '');
+        await api.patch(`/posts/${realId}/status`, { 
+          scheduledAt: `${dateString}T${post.publish_time || '12:00'}:00` 
+        });
+        fetchPosts();
+      } catch (error) {
+        console.error('Ошибка при перемещении поста:', error);
       }
     }
   };
@@ -198,7 +201,7 @@ const CalendarPage = () => {
                     )}
                     <div className="space-y-1.5">
                       {dayPosts.map(post => {
-                        const cfg = STATUS_CONFIG[post.status];
+                        const cfg = STATUS_CONFIG[post.status] || STATUS_CONFIG.draft;
                         const StatusIcon = cfg.icon;
                         return (
                           <div 

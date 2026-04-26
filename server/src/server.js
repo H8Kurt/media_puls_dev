@@ -3,6 +3,7 @@ require('dotenv').config();
 const app = require('./app');
 const { initModels } = require('./models');
 const initVkJobs = require('./jobs/vkStatsJob');
+const initPublishJob = require('./jobs/publishJob');
 const initBot = require('./bot');
 const initVkBot = require('./bot/vkBot');
 
@@ -12,6 +13,7 @@ const startServer = async () => {
   try {
     await initModels();
     initVkJobs(); // Инициализация сбора статистики ВК
+    initPublishJob(); // Запуск автопубликации
     initBot();    // Запуск Telegram-бота
     initVkBot();  // Запуск ВК-бота
     app.listen(PORT, () => {
