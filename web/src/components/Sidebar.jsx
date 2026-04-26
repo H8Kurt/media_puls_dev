@@ -1,9 +1,12 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Calendar, BarChart3, Settings, Users, ShieldCheck, FileText } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Calendar, BarChart3, Settings, Users, ShieldCheck, FileText, LogOut } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
   
   const menuItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Обзор' },
@@ -13,6 +16,12 @@ const Sidebar = () => {
     { path: '/dashboard/analytics', icon: BarChart3, label: 'Аналитика' },
     { path: '/dashboard/community', icon: Users, label: 'Сообщества' },
   ];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <div className="w-64 bg-white h-screen border-r border-gray-200 flex flex-col">
       <div className="p-6">
@@ -38,11 +47,18 @@ const Sidebar = () => {
           );
         })}
       </nav>
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200 space-y-1">
         <Link to="/dashboard/settings" className="flex items-center space-x-3 p-3 text-gray-600 hover:bg-gray-50 rounded-lg">
           <Settings size={20} />
           <span className="font-medium">Настройки</span>
         </Link>
+        <button 
+          onClick={handleLogout}
+          className="w-full flex items-center space-x-3 p-3 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+        >
+          <LogOut size={20} />
+          <span className="font-medium">Выйти</span>
+        </button>
       </div>
     </div>
   );

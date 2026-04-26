@@ -65,47 +65,59 @@ class VkService {
 
   async fetchAndSaveGroupStats() {
     try {
-      if (!this.accessToken || !this.groupId) return;
+      console.log('DEBUG: Starting fetchAndSaveGroupStats...');
+      if (!this.accessToken || !this.groupId) {
+        console.warn('DEBUG: Missing VK credentials', { hasToken: !!this.accessToken, groupId: this.groupId });
+        return;
+      }
+
+      const cleanGroupId = this.groupId.toString().replace(/[^0-9]/g, '');
+      console.log(`DEBUG: Fetching stats for group ${cleanGroupId}`);
 
       const response = await axios.get('https://api.vk.com/method/stats.get', {
         params: {
-          group_id: this.groupId,
+          group_id: cleanGroupId,
           interval: 'day',
-          intervals_count: 7,
+          intervals_count: 30,
           access_token: this.accessToken,
           v: VK_API_VERSION,
         },
       });
 
+      console.log('DEBUG: VK API Response received', JSON.stringify(response.data).substring(0, 500));
+
       if (response.data.error) {
-        // Если это ошибка доступа к статистике, просто выводим инфо, но не считаем это критическим сбоем
-        if (response.data.error.error_code === 15 || response.data.error.error_code === 7) {
-          console.info('VK Group Stats: Access denied (requires User Token). Skipping group stats.');
-        } else {
-          console.error('VK API Error (stats.get):', response.data.error.error_msg);
-        }
+        console.error('DEBUG: VK API Error (stats.get):', response.data.error);
         return;
       }
 
       const statsArray = response.data.response;
+      console.log(`DEBUG: Received ${Array.isArray(statsArray) ? statsArray.length : 0} days of stats`);
 
-      if (!Array.isArray(statsArray)) {
-        console.warn('VK stats.get returned non-array response:', statsArray);
+      if (!Array.isArray(statsArray) || statsArray.length === 0) {
+        console.warn('DEBUG: VK stats.get returned empty or non-array response');
         return;
       }
 
       for (const dayStat of statsArray) {
+        // ВК возвращает дату в формате Unix Timestamp (секунды)
+        const timestamp = dayStat.day || dayStat.period_from;
+        if (!timestamp) continue;
+
+        // Преобразуем в формат YYYY-MM-DD для БД
+        const statDate = new Date(timestamp * 1000).toISOString().split('T')[0];
+
         await VkGroupStats.upsert({
-          date: dayStat.day,
+          date: statDate,
           reach: dayStat.reach?.reach || 0,
           reachSubscribers: dayStat.reach?.reach_subscribers || 0,
           views: dayStat.activity?.views || 0,
           visitors: dayStat.visitors?.visitors || 0,
-          newSubscribers: dayStat.subscribed || 0,
+          newSubscribers: dayStat.activity?.subscribed || dayStat.subscribed || 0,
         });
       }
 
-      console.log('Successfully updated VK group stats');
+      console.log(`✅ SUCCESS: Updated VK group stats for ${statsArray.length} days`);
     } catch (error) {
       console.error('Error fetching VK group stats:', error.message);
     }

@@ -3,25 +3,52 @@ const { Op } = require('sequelize');
 
 const getStats = async (req, res) => {
   try {
-    // Получаем посты из БД
+    const { period = 'month', category, platform } = req.query;
+    
+    let startDate = new Date();
+    if (period === 'week') startDate.setDate(startDate.getDate() - 7);
+    else if (period === 'month') startDate.setMonth(startDate.getMonth() - 1);
+    else if (period === 'quarter') startDate.setMonth(startDate.getMonth() - 3);
+    else startDate.setMonth(startDate.getMonth() - 1); // default month
+
+    const whereClause = {
+      date: { [Op.gte]: startDate }
+    };
+    
+    // Если в модели VkPost есть поле category, можно добавить фильтр
+    // if (category) whereClause.category = category;
+
     const posts = await VkPost.findAll({
-      order: [['date', 'DESC']],
-      limit: 50
+      where: whereClause,
+      order: [['date', 'DESC']]
     });
 
-    // Получаем статистику группы за последние 30 дней
     const groupStats = await VkGroupStats.findAll({
       where: {
-        date: {
-          [Op.gte]: new Date(new Date() - 30 * 24 * 60 * 60 * 1000)
-        }
+        date: { [Op.gte]: startDate }
       },
       order: [['date', 'ASC']]
     });
 
+    // Расчет агрегированных метрик
+    const totalReach = posts.reduce((sum, p) => sum + (p.views || 0), 0);
+    const totalReactions = posts.reduce((sum, p) => sum + (p.likes || 0) + (p.comments || 0) + (p.reposts || 0), 0);
+    const avgErr = totalReach > 0 ? ((totalReactions / totalReach) * 100).toFixed(2) : 0;
+
     res.json({
+      summary: {
+        totalPosts: posts.length,
+        totalReach,
+        totalReactions,
+        avgErr: parseFloat(avgErr),
+        followersDynamic: groupStats.length > 0 ? groupStats[groupStats.length - 1].members_count - groupStats[0].members_count : 0
+      },
       posts,
-      groupStats
+      groupStats,
+      platformComparison: [
+        { name: 'ВКонтакте', reach: totalReach, reactions: totalReactions },
+        { name: 'Telegram', reach: 0, reactions: 0 } // Заглушка, пока нет данных ТГ
+      ]
     });
   } catch (error) {
     console.error('Error fetching stats:', error);

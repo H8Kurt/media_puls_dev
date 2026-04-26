@@ -14,11 +14,13 @@ import { TrendingUp, Users, MessageSquare, Share2, Eye, FileText, Download } fro
 const Dashboard = () => {
   const [stats, setStats] = useState({ posts: [], groupStats: [] });
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState('month');
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get('/api/stats/vk');
+        setLoading(true);
+        const response = await axios.get(`/api/stats/vk?period=${period}`);
         setStats(response.data);
       } catch (error) {
         console.error('Ошибка при загрузке статистики:', error);
@@ -27,9 +29,10 @@ const Dashboard = () => {
       }
     };
     fetchStats();
-  }, []);
+  }, [period]);
 
   const data = useMemo(() => {
+    console.log('DEBUG Dashboard stats:', stats);
     if (!stats.posts.length && !stats.groupStats.length) {
       return {
         stats: [
@@ -47,16 +50,31 @@ const Dashboard = () => {
     const avgER = totalViews > 0 ? (totalEngagements / totalViews * 100).toFixed(1) : 0;
 
     const chartData = stats.groupStats && stats.groupStats.length > 0
-      ? [...stats.groupStats].reverse().map(item => ({
+      ? [...stats.groupStats].map(item => ({
           date: new Date(item.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }),
-          views: item.views || 0,
-          reach: item.reach || 0
+          views: Number(item.views) || 0,
+          reach: Number(item.reach) || 0
         }))
-      : stats.posts.slice(0, 7).reverse().map(post => ({
-          date: new Date(post.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }),
-          views: post.views || 0,
-          reach: Math.round((post.views || 0) * 0.8) // Примерный охват, если нет точного
-        }));
+      : [];
+
+    // Добавляем сегодняшнюю точку, если её еще нет в статистике группы
+    const todayStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+    const hasToday = chartData.some(d => d.date === todayStr);
+    
+    if (!hasToday && stats.posts.length > 0) {
+      const todayPosts = stats.posts.filter(p => 
+        new Date(p.date).toLocaleDateString('ru-RU') === new Date().toLocaleDateString('ru-RU')
+      );
+      
+      if (todayPosts.length > 0) {
+        const todayViews = todayPosts.reduce((acc, p) => acc + (Number(p.views) || 0), 0);
+        chartData.push({
+          date: todayStr,
+          views: todayViews,
+          reach: Math.round(todayViews * 0.8)
+        });
+      }
+    }
 
     const topPosts = [...stats.posts]
       .map(post => ({
@@ -88,21 +106,42 @@ const Dashboard = () => {
           <h2 className="text-2xl font-bold text-gray-800">Аналитика ВКонтакте</h2>
           <p className="text-gray-500">Реальные данные из вашего сообщества.</p>
         </div>
-        <div className="flex gap-3">
-          <a 
-            href="/api/export/excel" 
-            className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
-          >
-            <Download size={18} className="text-green-600" />
-            Excel
-          </a>
-          <a 
-            href="/api/export/pdf" 
-            className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
-          >
-            <FileText size={18} className="text-red-600" />
-            PDF Отчет
-          </a>
+        
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center bg-white rounded-xl border border-gray-200 p-1 shadow-sm">
+            {[
+              { id: 'week', label: 'Неделя' },
+              { id: 'month', label: 'Месяц' },
+              { id: 'quarter', label: 'Квартал' }
+            ].map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPeriod(p.id)}
+                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  period === p.id ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          
+          <div className="flex gap-3">
+            <a 
+              href={`/api/export/excel?period=${period}`} 
+              className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
+            >
+              <Download size={18} className="text-green-600" />
+              Excel
+            </a>
+            <a 
+              href={`/api/export/pdf?period=${period}`} 
+              className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"
+            >
+              <FileText size={18} className="text-red-600" />
+              PDF Отчет
+            </a>
+          </div>
         </div>
       </header>
 

@@ -1,11 +1,28 @@
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit-table');
 const { VkPost, VkGroupStats } = require('../models');
+const { Op } = require('sequelize');
 const path = require('path');
+
+const getDateFilter = (period) => {
+  const now = new Date();
+  if (period === 'week') {
+    return { [Op.gte]: new Date(now.setDate(now.getDate() - 7)) };
+  } else if (period === 'month') {
+    return { [Op.gte]: new Date(now.setMonth(now.getMonth() - 1)) };
+  } else if (period === 'quarter') {
+    return { [Op.gte]: new Date(now.setMonth(now.getMonth() - 3)) };
+  }
+  return null;
+};
 
 exports.exportExcel = async (req, res) => {
   try {
-    const posts = await VkPost.findAll({ order: [['date', 'DESC']] });
+    const { period } = req.query;
+    const dateFilter = getDateFilter(period);
+    const where = dateFilter ? { date: dateFilter } : {};
+
+    const posts = await VkPost.findAll({ where, order: [['date', 'DESC']] });
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Статистика постов');
 
@@ -43,7 +60,11 @@ exports.exportExcel = async (req, res) => {
 
 exports.exportPdf = async (req, res) => {
   try {
-    const posts = await VkPost.findAll({ limit: 20, order: [['date', 'DESC']] });
+    const { period } = req.query;
+    const dateFilter = getDateFilter(period);
+    const where = dateFilter ? { date: dateFilter } : {};
+
+    const posts = await VkPost.findAll({ where, order: [['date', 'DESC']] });
     const doc = new PDFDocument({ margin: 40, size: 'A4' });
 
     const fontPath = path.join(__dirname, '../../assets/fonts/Roboto-Regular.ttf');
