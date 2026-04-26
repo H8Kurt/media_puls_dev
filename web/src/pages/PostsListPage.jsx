@@ -211,7 +211,16 @@ const PostsListPage = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="max-w-xs lg:max-w-md">
+                    <div className="max-w-xs lg:max-w-md flex items-center gap-3">
+                      {post.mediaUrl && (
+                        <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 border border-slate-200">
+                          <img 
+                            src={post.mediaUrl.startsWith('http') ? post.mediaUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${post.mediaUrl}`} 
+                            alt="" 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
                       <div className="text-sm font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
                         {post.title}
                       </div>

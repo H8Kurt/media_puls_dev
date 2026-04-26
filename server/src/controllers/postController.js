@@ -63,6 +63,7 @@ const getPosts = async (req, res) => {
         id: `pend_${p.id}`,
         title: p.title || (p.content ? p.content.substring(0, 50) + '...' : 'Запланированный пост'),
         content: p.content,
+        mediaUrl: p.mediaUrl,
         publish_date: dateObj.toLocaleDateString('en-CA'), // Формат YYYY-MM-DD
         publish_time: dateObj.toTimeString().split(' ')[0].substring(0, 5),
         status: p.status === 'pending' ? 'scheduled' : p.status,

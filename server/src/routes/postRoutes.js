@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const postController = require('../controllers/postController');
+const aiController = require('../controllers/aiController');
 const { upload, uploadFile } = require('../middleware/uploadMiddleware');
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -10,6 +11,7 @@ router.post('/posts', postController.createPost);
 router.get('/moderation', postController.getModerationPosts);
 router.patch('/posts/:id/status', postController.updatePostStatus);
 router.post('/upload', upload.single('file'), uploadFile);
+router.post('/improve-text', aiController.improveText);
 
 
 module.exports = router;

@@ -26,6 +26,10 @@ const PendingPost = sequelize.define('PendingPost', {
   category: {
     type: DataTypes.STRING,
   },
+  mediaUrl: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   status: {
     type: DataTypes.ENUM('pending', 'approved', 'rejected', 'scheduled', 'published', 'error'),
     defaultValue: 'pending',

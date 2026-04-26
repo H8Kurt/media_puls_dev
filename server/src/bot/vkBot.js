@@ -66,6 +66,17 @@ const initVkBot = () => {
       // Игнорируем, если текст совпадает с названием кнопки создания поста
       if (messageText === '📝 Создать пост') return;
 
+      // Получаем имя пользователя
+      let authorName = `VK User ${context.senderId}`;
+      try {
+        const [user] = await vk.api.users.get({ user_ids: context.senderId });
+        if (user) {
+          authorName = `${user.first_name} ${user.last_name}`;
+        }
+      } catch (e) {
+        console.error('Failed to get VK user info:', e);
+      }
+
       let mediaUrl = '';
 
       const photos = context.attachments.filter(a => a.type === 'photo');
@@ -83,8 +94,8 @@ const initVkBot = () => {
 
       await PendingPost.create({
         telegramId: `vk_${context.senderId}`,
-        authorName: `VK User ${context.senderId}`,
-        text: messageText,
+        authorName: authorName,
+        content: messageText,
         mediaUrl: mediaUrl,
         status: 'pending'
       });

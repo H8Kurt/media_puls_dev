@@ -42,6 +42,7 @@ const CreatePostModal = ({ isOpen, onClose, onSave, initialData = null }) => {
   });
 
   const [previews, setPreviews] = useState([]);
+  const [isImproving, setIsImproving] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -97,6 +98,23 @@ const CreatePostModal = ({ isOpen, onClose, onSave, initialData = null }) => {
         ? prev.channels.filter(id => id !== channelId)
         : [...prev.channels, channelId]
     }));
+  };
+
+  const handleImproveText = async () => {
+    if (!formData.content || isImproving) return;
+    
+    setIsImproving(true);
+    try {
+      const response = await api.post('/improve-text', { text: formData.content });
+      if (response.data.improvedText) {
+        setFormData(prev => ({ ...prev, content: response.data.improvedText }));
+      }
+    } catch (err) {
+      console.error('Ошибка при улучшении текста:', err);
+      alert('Не удалось улучшить текст. Проверьте настройки AI на бэкенде.');
+    } finally {
+      setIsImproving(false);
+    }
   };
 
   const handleFileChange = async (e) => {
@@ -179,7 +197,28 @@ const CreatePostModal = ({ isOpen, onClose, onSave, initialData = null }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Содержание</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-slate-700">Содержание</label>
+                  {!isViewOnly && (
+                    <button
+                      onClick={handleImproveText}
+                      disabled={isImproving || !formData.content}
+                      className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    >
+                      {isImproving ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                          Улучшаю...
+                        </>
+                      ) : (
+                        <>
+                          <Send size={12} className="rotate-[-45deg]" />
+                          Улучшить нейросетью
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
                 <textarea
                   rows="8"
                   disabled={isViewOnly}

@@ -120,17 +120,61 @@ class VkService {
 
       const params = {
         owner_id: `-${this.groupId.toString().replace(/[^0-9]/g, '')}`,
-        message: post.text,
+        message: post.content || post.text,
         access_token: groupToken,
         v: VK_API_VERSION,
       };
 
-      // Если есть картинка, её нужно сначала загрузить на сервера ВК или прикрепить ссылкой
-      // Для начала попробуем прикрепить как attachment, если это ссылка на ресурс ВК
+      // Если есть картинка, её нужно загрузить в ВК
       if (post.mediaUrl) {
-        // В ВК аттачменты передаются в формате <type><owner_id>_<media_id>
-        // Если это просто ссылка, ВК может её распарсить сам, если передать в attachments
-        params.attachments = post.mediaUrl;
+        try {
+          const path = require('path');
+          const fs = require('fs');
+          const FormData = require('form-data');
+          
+          // 1. Получаем адрес для загрузки
+          const uploadServer = await axios.get('https://api.vk.com/method/photos.getWallUploadServer', {
+            params: {
+              group_id: this.groupId.toString().replace(/[^0-9]/g, ''),
+              access_token: groupToken,
+              v: VK_API_VERSION
+            }
+          });
+
+          if (uploadServer.data.response) {
+            const { upload_url } = uploadServer.data.response;
+            const filePath = path.join(__dirname, '../../', post.mediaUrl);
+            
+            if (fs.existsSync(filePath)) {
+              // 2. Загружаем файл на сервер ВК
+              const formData = new FormData();
+              formData.append('photo', fs.createReadStream(filePath));
+              
+              const uploadRes = await axios.post(upload_url, formData, {
+                headers: formData.getHeaders()
+              });
+
+              // 3. Сохраняем фото в ВК
+              const savedPhoto = await axios.get('https://api.vk.com/method/photos.saveWallPhoto', {
+                params: {
+                  group_id: this.groupId.toString().replace(/[^0-9]/g, ''),
+                  photo: uploadRes.data.photo,
+                  server: uploadRes.data.server,
+                  hash: uploadRes.data.hash,
+                  access_token: groupToken,
+                  v: VK_API_VERSION
+                }
+              });
+
+              if (savedPhoto.data.response && savedPhoto.data.response[0]) {
+                const photo = savedPhoto.data.response[0];
+                params.attachments = `photo${photo.owner_id}_${photo.id}`;
+              }
+            }
+          }
+        } catch (uploadError) {
+          console.error('Failed to upload image to VK, sending without it:', uploadError.message);
+        }
       }
 
       const response = await axios.get('https://api.vk.com/method/wall.post', { params });

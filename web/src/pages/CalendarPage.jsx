@@ -219,6 +219,15 @@ const CalendarPage = () => {
                               )}
                             </div>
                             <div className="text-[11px] font-semibold text-slate-700 leading-tight line-clamp-2 group-hover:text-indigo-700">{post.title}</div>
+                            {post.mediaUrl && (
+                              <div className="mt-2 rounded-md overflow-hidden h-20 w-full bg-slate-100">
+                                <img 
+                                  src={post.mediaUrl.startsWith('http') ? post.mediaUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${post.mediaUrl}`} 
+                                  alt="" 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            )}
                             <div className="flex items-center justify-between mt-2">
                               <span className="text-[9px] font-bold text-slate-400 uppercase">{post.channel}</span>
                               <StatusIcon size={12} className={cfg.text} />
