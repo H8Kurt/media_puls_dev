@@ -4,6 +4,8 @@ const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 const postRoutes = require('./routes/postRoutes');
 const exportRoutes = require('./routes/exportRoutes');
+const statsRoutes = require('./routes/statsRoutes');
+const channelRoutes = require('./routes/channelRoutes');
 
 const app = express();
 
@@ -14,6 +16,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api', postRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/stats', statsRoutes);
+app.use('/api/channels', channelRoutes);
 
 
 module.exports = app;

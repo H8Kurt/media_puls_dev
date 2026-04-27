@@ -215,7 +215,7 @@ const PostsListPage = () => {
                       {post.mediaUrl && (
                         <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 border border-slate-200">
                           <img 
-                            src={post.mediaUrl.startsWith('http') ? post.mediaUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${post.mediaUrl}`} 
+                            src={post.mediaUrl.startsWith('http') ? post.mediaUrl : `http://localhost:4000${post.mediaUrl}`} 
                             alt="" 
                             className="w-full h-full object-cover"
                           />

@@ -29,6 +29,10 @@ const VkPost = sequelize.define('VkPost', {
     type: DataTypes.INTEGER,
     defaultValue: 0,
   },
+  channelId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
 });
 
 module.exports = VkPost;

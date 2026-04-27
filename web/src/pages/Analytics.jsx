@@ -39,7 +39,8 @@ const Analytics = () => {
 
   const handleExport = async (format) => {
     try {
-      const response = await axios.get(`http://localhost:4000/api/export/${format}?period=${period}`, {
+      let exportUrl = `http://localhost:4000/api/export/${format}?period=${period}`;
+      const response = await axios.get(exportUrl, {
         responseType: 'blob'
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));

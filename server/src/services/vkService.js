@@ -12,11 +12,10 @@ class VkService {
   async fetchAndSavePosts() {
     try {
       if (!this.accessToken || !this.groupId) {
-        console.warn('VK credentials missing in .env');
+        console.warn('VK credentials missing');
         return;
       }
 
-      // Очищаем ID группы от возможных префиксов, оставляем только цифры
       const cleanGroupId = this.groupId.toString().replace(/[^0-9]/g, '');
 
       const response = await axios.get('https://api.vk.com/method/wall.get', {
@@ -28,22 +27,13 @@ class VkService {
         },
       });
 
-      // Если сервисный ключ не сработал для wall.get (редко, но бывает), 
-      // попробуем подсказать пользователю
       if (response.data.error) {
-        if (response.data.error.error_code === 28 || response.data.error.error_code === 27) {
-          console.error('❌ VK Error: Этот токен не может читать стену. Пожалуйста, используйте СЕРВИСНЫЙ КЛЮЧ из настроек приложения ВК.');
-        } else {
-          console.error('VK API Error (wall.get):', response.data.error.error_msg);
-        }
+        console.error('VK API Error (wall.get):', response.data.error.error_msg);
         return;
       }
 
       const posts = response.data.response.items;
-      if (!posts) {
-        console.warn('VK returned no posts. Check if the group is private or empty.');
-        return;
-      }
+      if (!posts) return;
 
       for (const post of posts) {
         await VkPost.upsert({
@@ -53,7 +43,7 @@ class VkService {
           likes: post.likes?.count || 0,
           comments: post.comments?.count || 0,
           reposts: post.reposts?.count || 0,
-          views: post.views?.count || 0,
+          views: post.views?.count || 0
         });
       }
 
@@ -65,15 +55,10 @@ class VkService {
 
   async fetchAndSaveGroupStats() {
     try {
-      console.log('DEBUG: Starting fetchAndSaveGroupStats...');
-      if (!this.accessToken || !this.groupId) {
-        console.warn('DEBUG: Missing VK credentials', { hasToken: !!this.accessToken, groupId: this.groupId });
-        return;
-      }
+      if (!this.accessToken || !this.groupId) return;
 
       const cleanGroupId = this.groupId.toString().replace(/[^0-9]/g, '');
-      console.log(`DEBUG: Fetching stats for group ${cleanGroupId}`);
-
+      
       const response = await axios.get('https://api.vk.com/method/stats.get', {
         params: {
           group_id: cleanGroupId,
@@ -84,27 +69,18 @@ class VkService {
         },
       });
 
-      console.log('DEBUG: VK API Response received', JSON.stringify(response.data).substring(0, 500));
-
       if (response.data.error) {
-        console.error('DEBUG: VK API Error (stats.get):', response.data.error);
+        console.error('VK API Error (stats.get):', response.data.error.error_msg);
         return;
       }
 
       const statsArray = response.data.response;
-      console.log(`DEBUG: Received ${Array.isArray(statsArray) ? statsArray.length : 0} days of stats`);
-
-      if (!Array.isArray(statsArray) || statsArray.length === 0) {
-        console.warn('DEBUG: VK stats.get returned empty or non-array response');
-        return;
-      }
+      if (!Array.isArray(statsArray)) return;
 
       for (const dayStat of statsArray) {
-        // ВК возвращает дату в формате Unix Timestamp (секунды)
         const timestamp = dayStat.day || dayStat.period_from;
         if (!timestamp) continue;
 
-        // Преобразуем в формат YYYY-MM-DD для БД
         const statDate = new Date(timestamp * 1000).toISOString().split('T')[0];
 
         await VkGroupStats.upsert({
@@ -117,7 +93,7 @@ class VkService {
         });
       }
 
-      console.log(`✅ SUCCESS: Updated VK group stats for ${statsArray.length} days`);
+      console.log(`✅ SUCCESS: Updated VK group stats`);
     } catch (error) {
       console.error('Error fetching VK group stats:', error.message);
     }
@@ -138,7 +114,8 @@ class VkService {
       };
 
       // Если есть картинка, её нужно загрузить в ВК
-      if (post.mediaUrl) {
+      const mediaUrl = post.mediaUrl || post.media;
+      if (mediaUrl) {
         try {
           const path = require('path');
           const fs = require('fs');
@@ -155,7 +132,9 @@ class VkService {
 
           if (uploadServer.data.response) {
             const { upload_url } = uploadServer.data.response;
-            const filePath = path.join(__dirname, '../../', post.mediaUrl);
+            // Убираем начальный слэш если он есть
+            const relativePath = mediaUrl.startsWith('/') ? mediaUrl.substring(1) : mediaUrl;
+            const filePath = path.join(__dirname, '../../', relativePath);
             
             if (fs.existsSync(filePath)) {
               // 2. Загружаем файл на сервер ВК
@@ -182,6 +161,8 @@ class VkService {
                 const photo = savedPhoto.data.response[0];
                 params.attachments = `photo${photo.owner_id}_${photo.id}`;
               }
+            } else {
+              console.error('File not found for VK upload:', filePath);
             }
           }
         } catch (uploadError) {

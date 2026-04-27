@@ -9,30 +9,43 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from 'recharts';
-import { TrendingUp, Users, MessageSquare, Share2, Eye, FileText, Download } from 'lucide-react';
+import { TrendingUp, Users, MessageSquare, Share2, Eye, FileText, Download, RefreshCw } from 'lucide-react';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({ posts: [], groupStats: [] });
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [period, setPeriod] = useState('month');
 
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`/api/stats/vk?period=${period}`);
+      setStats(response.data);
+    } catch (error) {
+      console.error('Ошибка при загрузке статистики:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`/api/stats/vk?period=${period}`);
-        setStats(response.data);
-      } catch (error) {
-        console.error('Ошибка при загрузке статистики:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchStats();
   }, [period]);
 
+  const handleSync = async () => {
+    try {
+      setSyncing(true);
+      await axios.post(`/api/stats/sync`);
+      await fetchStats();
+    } catch (error) {
+      console.error('Ошибка синхронизации:', error);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const data = useMemo(() => {
-    console.log('DEBUG Dashboard stats:', stats);
     if (!stats.posts.length && !stats.groupStats.length) {
       return {
         stats: [
@@ -57,7 +70,6 @@ const Dashboard = () => {
         }))
       : [];
 
-    // Добавляем сегодняшнюю точку, если её еще нет в статистике группы
     const todayStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
     const hasToday = chartData.some(d => d.date === todayStr);
     
@@ -127,6 +139,14 @@ const Dashboard = () => {
           </div>
           
           <div className="flex gap-3">
+            <button 
+              onClick={handleSync}
+              disabled={syncing}
+              className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm disabled:opacity-50"
+            >
+              <RefreshCw size={18} className={`text-blue-600 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Обновление...' : 'Обновить данные'}
+            </button>
             <a 
               href={`/api/export/excel?period=${period}`} 
               className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm"

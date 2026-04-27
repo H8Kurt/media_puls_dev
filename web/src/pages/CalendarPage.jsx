@@ -222,7 +222,7 @@ const CalendarPage = () => {
                             {post.mediaUrl && (
                               <div className="mt-2 rounded-md overflow-hidden h-20 w-full bg-slate-100">
                                 <img 
-                                  src={post.mediaUrl.startsWith('http') ? post.mediaUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${post.mediaUrl}`} 
+                                  src={post.mediaUrl.startsWith('http') ? post.mediaUrl : `http://localhost:4000${post.mediaUrl}`} 
                                   alt="" 
                                   className="w-full h-full object-cover"
                                 />

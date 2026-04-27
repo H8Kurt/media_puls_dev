@@ -53,7 +53,7 @@ const Landing = () => {
             <div className="absolute -inset-4 bg-indigo-100 rounded-[3rem] rotate-3 opacity-50"></div>
             <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white bg-slate-100 aspect-[4/3]">
               <img 
-                src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80" 
+                src="https://sun9-50.userapi.com/s/v1/ig2/QWLm5mJTdID86SGJuSSsra90cM_n9L7Nw5savyCX6na1hAxeJb_TYXAAewtbPnd8IMkQKpz1c141uAvuPl1cpIGl.jpg?quality=95&as=32x16,48x24,72x36,108x54,160x79,240x119,360x178,480x238,540x268,640x317,720x357,1080x535,1280x634,1440x713,1877x930&from=bu&u=JtHawxI3VR-CJ2BZX1h6TfvIbNXCZR8BMw2Iq3P5quE&cs=1877x0" 
                 alt="Analytics Dashboard" 
                 className="w-full h-full object-cover"
                 onError={(e) => { e.target.style.display = 'none'; }}
@@ -75,19 +75,19 @@ const Landing = () => {
               {
                 title: "Глубокая аналитика",
                 desc: "Отслеживайте ERR, охваты и динамику роста в реальном времени.",
-                img: "https://images.unsplash.com/photo-1551288049-bbbda536339a?auto=format&fit=crop&w=600&q=80",
+                img: "https://sun4-22.userapi.com/s/v1/ig2/ZgN8B2npRFoD9jJCMdQmcoZh1VwVU0OXq3S75FGCV4gQU4HbtEXpWg7gm4vjEKt79CZG05VocT7IkqJQo47P-kqz.jpg?quality=95&as=32x16,48x24,72x36,108x54,160x80,240x119,360x179,480x239,540x269,640x319,720x358,1080x538,1280x637,1440x717,1880x936&from=bu&cs=1880x0",
                 color: "bg-blue-600"
               },
               {
                 title: "Умный календарь",
                 desc: "Планируйте публикации на недели вперед с визуальным редактором.",
-                img: "https://images.unsplash.com/photo-1506784365847-bbad939e9335?auto=format&fit=crop&w=600&q=80",
+                img: "https://sun9-82.userapi.com/s/v1/ig2/_8YAjIAGHCzI-fNeHDUAC_ey7L3czUuTxvJtNS4YuDqN_B_1zo9vhHP0isnnUNTorWpNb7iDgqwg64MdgDnObdOt.jpg?quality=95&as=32x16,48x24,72x36,108x54,160x80,240x119,360x179,480x239,540x269,640x319,720x358,1080x538,1280x637,1440x717,1878x935&from=bu&cs=1878x0",
                 color: "bg-emerald-600"
               },
               {
                 title: "Модерация",
                 desc: "Контролируйте качество контента перед публикацией в каналы.",
-                img: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=600&q=80",
+                img: "https://sun9-82.userapi.com/s/v1/ig2/_8YAjIAGHCzI-fNeHDUAC_ey7L3czUuTxvJtNS4YuDqN_B_1zo9vhHP0isnnUNTorWpNb7iDgqwg64MdgDnObdOt.jpg?quality=95&as=32x16,48x24,72x36,108x54,160x80,240x119,360x179,480x239,540x269,640x319,720x358,1080x538,1280x637,1440x717,1878x935&from=bu&cs=1878x0",
                 color: "bg-purple-600"
               }
             ].map((feature, i) => (

@@ -1,6 +1,6 @@
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit-table');
-const { VkPost, VkGroupStats } = require('../models');
+const { VkPost, VkGroupStats, Channel } = require('../models');
 const { Op } = require('sequelize');
 const path = require('path');
 

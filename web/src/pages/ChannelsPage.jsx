@@ -3,77 +3,55 @@ import {
   Plus, 
   MessageSquare, 
   Share2, 
-  Settings, 
   Trash2, 
-  ExternalLink, 
-  CheckCircle2, 
-  AlertCircle,
-  Send,
-  ShieldCheck,
   RefreshCw,
   X
 } from 'lucide-react';
-
-const INITIAL_CHANNELS = [
-  { id: 1, name: 'Молодёжь Красноярска', type: 'telegram', members: 12450, status: 'active', last_sync: '2026-04-26 10:00' },
-  { id: 2, name: 'Центр «Зеркало»', type: 'vk', members: 8900, status: 'active', last_sync: '2026-04-26 09:30' },
-  { id: 3, name: 'Хакатон ПроТехно', type: 'telegram', members: 1200, status: 'error', last_sync: '2026-04-25 18:00' }
-];
+import axios from 'axios';
 
 const ChannelsPage = () => {
   const [channels, setChannels] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [testStatus, setTestStatus] = useState({}); // { channelId: 'sending' | 'success' | 'error' }
+  const [newChannel, setNewChannel] = useState({ externalId: '', name: '', platform: 'vk' });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('user_channels');
-    if (saved) {
-      setChannels(JSON.parse(saved));
-    } else {
-      setChannels(INITIAL_CHANNELS);
-      localStorage.setItem('user_channels', JSON.stringify(INITIAL_CHANNELS));
-    }
+    fetchChannels();
   }, []);
 
-  const handleAddChannel = (type) => {
-    // Имитация OAuth/подключения
-    const newChannel = {
-      id: Date.now(),
-      name: type === 'telegram' ? 'Новый TG Канал' : 'Новое сообщество VK',
-      type: type,
-      members: 0,
-      status: 'active',
-      last_sync: new Date().toLocaleString('ru-RU').slice(0, 16)
-    };
-    
-    const updated = [...channels, newChannel];
-    setChannels(updated);
-    localStorage.setItem('user_channels', JSON.stringify(updated));
-    setIsAddModalOpen(false);
-  };
-
-  const handleDeleteChannel = (id) => {
-    if (window.confirm('Вы уверены, что хотите отключить этот канал?')) {
-      const updated = channels.filter(c => c.id !== id);
-      setChannels(updated);
-      localStorage.setItem('user_channels', JSON.stringify(updated));
+  const fetchChannels = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/channels');
+      setChannels(response.data);
+    } catch (error) {
+      console.error('Error fetching channels:', error);
     }
   };
 
-  const handleTestSend = (id) => {
-    setTestStatus({ ...testStatus, [id]: 'sending' });
-    
-    // Имитация отправки
-    setTimeout(() => {
-      setTestStatus({ ...testStatus, [id]: 'success' });
-      setTimeout(() => {
-        setTestStatus(prev => {
-          const next = { ...prev };
-          delete next[id];
-          return next;
-        });
-      }, 3000);
-    }, 1500);
+  const handleAddChannel = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await axios.post('http://localhost:4000/api/channels', newChannel);
+      setIsAddModalOpen(false);
+      setNewChannel({ externalId: '', name: '', platform: 'vk' });
+      fetchChannels();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Ошибка при добавлении');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteChannel = async (id) => {
+    if (window.confirm('Вы уверены, что хотите отключить этот канал?')) {
+      try {
+        await axios.delete(`http://localhost:4000/api/channels/${id}`);
+        fetchChannels();
+      } catch (error) {
+        console.error('Error deleting channel:', error);
+      }
+    }
   };
 
   return (
@@ -99,58 +77,27 @@ const ChannelsPage = () => {
             <div className="p-5">
               <div className="flex items-start justify-between mb-4">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                  channel.type === 'telegram' ? 'bg-sky-50 text-sky-600' : 'bg-blue-50 text-blue-600'
+                  channel.platform === 'telegram' ? 'bg-sky-50 text-sky-600' : 'bg-blue-50 text-blue-600'
                 }`}>
-                  {channel.type === 'telegram' ? <MessageSquare size={24} /> : <Share2 size={24} />}
+                  {channel.platform === 'telegram' ? <MessageSquare size={24} /> : <Share2 size={24} />}
                 </div>
                 <div className="flex items-center gap-1">
                   <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
-                    channel.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                    channel.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
                   }`}>
-                    {channel.status === 'active' ? 'Активен' : 'Ошибка'}
+                    {channel.isActive ? 'Активен' : 'Отключен'}
                   </span>
                 </div>
               </div>
 
               <h3 className="font-bold text-slate-800 text-lg mb-1 truncate">{channel.name}</h3>
               <p className="text-slate-400 text-xs flex items-center gap-1 mb-4">
-                {channel.type === 'telegram' ? 'Telegram Channel' : 'VK Community'} • {channel.members.toLocaleString()} участников
+                {channel.platform === 'telegram' ? 'Telegram Channel' : 'VK Community'} • ID: {channel.externalId}
               </p>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs text-slate-500 bg-slate-50 p-2 rounded-lg">
-                  <span className="flex items-center gap-1"><RefreshCw size={12} /> Синхронизация:</span>
-                  <span className="font-medium">{channel.last_sync}</span>
-                </div>
-              </div>
             </div>
 
-            <div className="px-5 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => handleTestSend(channel.id)}
-                  disabled={testStatus[channel.id] === 'sending'}
-                  className={`p-2 rounded-lg transition-all flex items-center gap-2 text-xs font-bold ${
-                    testStatus[channel.id] === 'success' 
-                    ? 'bg-emerald-100 text-emerald-700' 
-                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  {testStatus[channel.id] === 'sending' ? (
-                    <RefreshCw size={14} className="animate-spin" />
-                  ) : testStatus[channel.id] === 'success' ? (
-                    <CheckCircle2 size={14} />
-                  ) : (
-                    <Send size={14} />
-                  )}
-                  {testStatus[channel.id] === 'success' ? 'Отправлено' : 'Тест'}
-                </button>
-              </div>
-              
+            <div className="px-5 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-end">
               <div className="flex items-center gap-1">
-                <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
-                  <Settings size={18} />
-                </button>
                 <button 
                   onClick={() => handleDeleteChannel(channel.id)}
                   className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
@@ -163,7 +110,6 @@ const ChannelsPage = () => {
         ))}
       </div>
 
-      {/* Modal Add Channel */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
@@ -173,46 +119,49 @@ const ChannelsPage = () => {
                 <X size={20} className="text-slate-500" />
               </button>
             </div>
-            <div className="p-6 space-y-4">
-              <p className="text-slate-500 text-sm">Выберите платформу для интеграции. Мы используем официальные API для безопасного доступа.</p>
+            <form onSubmit={handleAddChannel} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Платформа</label>
+                <select 
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2"
+                  value={newChannel.platform}
+                  onChange={(e) => setNewChannel({...newChannel, platform: e.target.value})}
+                >
+                  <option value="vk">ВКонтакте</option>
+                  <option value="telegram">Telegram</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">ID Сообщества / Канала</label>
+                <input 
+                  type="text"
+                  required
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2"
+                  placeholder="Например: 238076289"
+                  value={newChannel.externalId}
+                  onChange={(e) => setNewChannel({...newChannel, externalId: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Название (для себя)</label>
+                <input 
+                  type="text"
+                  required
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2"
+                  placeholder="Например: Моя группа ВК"
+                  value={newChannel.name}
+                  onChange={(e) => setNewChannel({...newChannel, name: e.target.value})}
+                />
+              </div>
               
               <button 
-                onClick={() => handleAddChannel('telegram')}
-                className="w-full flex items-center justify-between p-4 bg-sky-50 hover:bg-sky-100 border border-sky-100 rounded-2xl transition-all group"
+                type="submit"
+                disabled={loading}
+                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-sky-600 shadow-sm">
-                    <MessageSquare size={24} />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold text-slate-800">Telegram</div>
-                    <div className="text-xs text-sky-600 font-medium">Через BotFather / Токен</div>
-                  </div>
-                </div>
-                <Plus size={20} className="text-sky-400 group-hover:text-sky-600" />
+                {loading ? 'Добавление...' : 'Добавить'}
               </button>
-
-              <button 
-                onClick={() => handleAddChannel('vk')}
-                className="w-full flex items-center justify-between p-4 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-2xl transition-all group"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-blue-600 shadow-sm">
-                    <Share2 size={24} />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold text-slate-800">ВКонтакте</div>
-                    <div className="text-xs text-blue-600 font-medium">Через OAuth авторизацию</div>
-                  </div>
-                </div>
-                <Plus size={20} className="text-blue-400 group-hover:text-blue-600" />
-              </button>
-
-              <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-xl text-amber-700 text-[11px] font-medium">
-                <ShieldCheck size={16} />
-                Ваши данные защищены и не передаются третьим лицам.
-              </div>
-            </div>
+            </form>
           </div>
         </div>
       )}

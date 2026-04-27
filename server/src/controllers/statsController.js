@@ -1,12 +1,22 @@
-const { VkPost, VkGroupStats } = require('../models');
+const { VkPost, VkGroupStats, Channel } = require('../models');
 const { Op } = require('sequelize');
+const vkService = require('../services/vkService');
+
+exports.syncStats = async (req, res) => {
+  try {
+    await vkService.fetchAndSavePosts();
+    await vkService.fetchAndSaveGroupStats();
+    res.json({ message: 'Статистика успешно обновлена' });
+  } catch (error) {
+    res.status(500).json({ message: 'Ошибка при синхронизации', error: error.message });
+  }
+};
 
 exports.getVkStats = async (req, res) => {
   try {
     const { period, category } = req.query;
     let dateFilter = {};
 
-    // Используем завтрашний день как верхнюю границу, чтобы захватить текущие сутки
     const endOfToday = new Date();
     endOfToday.setHours(23, 59, 59, 999);
 
@@ -23,7 +33,6 @@ exports.getVkStats = async (req, res) => {
     if (Object.keys(dateFilter).length > 0) {
       postWhere.date = { ...dateFilter, [Op.lte]: endOfToday };
     }
-    // category filter can be added if VkPost has category field
 
     const posts = await VkPost.findAll({
       where: postWhere,
@@ -40,11 +49,7 @@ exports.getVkStats = async (req, res) => {
       order: [['date', 'ASC']]
     });
 
-
-    res.json({
-      posts,
-      groupStats
-    });
+    res.json({ posts, groupStats });
   } catch (error) {
     res.status(500).json({ message: 'Ошибка при получении статистики', error: error.message });
   }

@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const vkService = require('../services/vkService');
+const { Channel } = require('../models');
 
 const initVkJobs = () => {
   // Запуск каждый час
@@ -10,8 +11,10 @@ const initVkJobs = () => {
   });
 
   // Также запустим один раз при старте сервера
-  vkService.fetchAndSavePosts();
-  vkService.fetchAndSaveGroupStats();
+  setTimeout(async () => {
+    await vkService.fetchAndSavePosts();
+    await vkService.fetchAndSaveGroupStats();
+  }, 5000);
 };
 
 module.exports = initVkJobs;

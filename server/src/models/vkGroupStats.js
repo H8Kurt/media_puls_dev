@@ -27,6 +27,10 @@ const VkGroupStats = sequelize.define('VkGroupStats', {
     type: DataTypes.INTEGER,
     defaultValue: 0,
   },
+  channelId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
 });
 
 module.exports = VkGroupStats;
